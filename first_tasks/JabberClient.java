@@ -1,8 +1,6 @@
 import java.io.*;
 import java.net.*;
 
-import javax.print.DocFlavor.STRING;
-
 public class JabberClient{
     public static final int N = 10;
     public static int PORT = 8080;
