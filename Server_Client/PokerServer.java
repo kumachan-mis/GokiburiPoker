@@ -22,25 +22,26 @@ public class PokerServer{
 
         try{
             s = new ServerSocket(PORT);
+        }catch(IOException e){
+            System.err.println(e);
+        }finally{
             System.out.println("準備完了 : " + s + "  プレイヤーの接続待機中...");
-            PokerServerThread.setMainPlayerId((new Random()).nextInt(PLAYER));
-            threads = new PokerServerThread[PLAYER];
+        }
 
-            try{
-                for(int n = 0; n < PLAYER;){
-                    socket = s.accept();
-                    System.err.println(socket);
+        PokerServerThread.setMainPlayerId((new Random()).nextInt(PLAYER));
+        threads = new PokerServerThread[PLAYER];
 
-                    if(socket != null){
-                        threads[n] = new PokerServerThread(socket);
-                        System.out.println("新しいプレイヤーが参加しました. " + (n + 1) + "/" + PLAYER);
-                        threads[n].start();
-                        n++;
-                    }
+        try{
+            for(int n = 0; n < PLAYER;){
+                socket = s.accept();
+                System.err.println(socket);
+
+                if(socket != null){
+                    threads[n] = new PokerServerThread(socket);
+                    System.out.println("新しいプレイヤーが参加しました. " + (n + 1) + "/" + PLAYER);
+                    threads[n].start();
+                    n++;
                 }
-
-            }catch(IOException e){
-                System.err.println(e);
             }
 
             try{
@@ -53,6 +54,8 @@ public class PokerServer{
                 System.out.println("ゲームを終了します.");
             }
 
+        }catch(IOException e){
+            System.err.println(e);
         }finally{
             socket.close();
             s.close();
@@ -64,14 +67,13 @@ class PokerServerThread extends Thread{
 
     private static int ready = 0;
     private static int mainPlayerId = 0;
-    private  static int loserId = -1;
 
     private Socket socket = null;
     private BufferedReader reader = null;
     private PrintWriter writer = null;;
 
     private int playerId = -1;
-    private String nickName = null;
+    private String nickName = "Player[" + ready + "]";
     private boolean isAvailable = true;
 
     public PokerServerThread(Socket socket) throws IOException{
@@ -84,6 +86,7 @@ class PokerServerThread extends Thread{
                 socket.getInputStream()
             )
         );
+
         writer = 
         new PrintWriter(
             new BufferedWriter(
@@ -94,28 +97,13 @@ class PokerServerThread extends Thread{
         );
 
         playerId = ready;
-        nickName = "Player[" + ready + "]";
-        isAvailable = true;
         ready++;
-
         if(ready == PokerServer.PLAYER){
             ready = 0;
         }
     }
 
-    public static void setMainPlayerId(int mainPlayerId){
-        PokerServerThread.mainPlayerId = mainPlayerId;
-    }
-
-    public void run(){
-        try{
-            initialize();
-        }catch(IOException e){
-            System.err.println(e);
-        }
-    }
-
-    private synchronized void initialize() throws IOException{
+    private synchronized void receiveNickname(){
         while(true){
             try{
                 nickName = reader.readLine();
@@ -124,10 +112,7 @@ class PokerServerThread extends Thread{
                 }
             }catch(IOException e){
                 System.err.println(e);
-                System.err.println("プレイヤー " + nickName + " との接続が切れました");
-                isAvailable = false;
-                socket.close();
-                PokerServer.PLAYER--;
+                connectionError();
                 return;
             }
         }
@@ -135,12 +120,11 @@ class PokerServerThread extends Thread{
         String acMessage = nickName + " の登録が完了しました";
         System.out.println(acMessage);
         writer.println("[サーバ]: " + acMessage);
-        ready++;
-        
         synchro();
     }
 
     private void synchro(){
+        ready++;
         try{
             while(ready < PokerServer.PLAYER){
                 wait();
@@ -150,5 +134,26 @@ class PokerServerThread extends Thread{
         }
         notifyAll();
         ready = 0;
+    }
+    
+    private void connectionError(){
+        System.err.println("プレイヤー " + nickName + " との接続が切れました");
+        isAvailable = false;
+        try{
+            socket.close();
+        }catch(IOException e){
+            System.err.println(e);
+        }
+        PokerServer.PLAYER--;
+    }
+
+    
+    public void run(){
+        receiveNickname();
+    }
+
+
+    public static void setMainPlayerId(int mainPlayerId){
+        PokerServerThread.mainPlayerId = mainPlayerId;
     }
 }

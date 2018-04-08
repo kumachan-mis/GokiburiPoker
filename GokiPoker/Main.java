@@ -1,5 +1,4 @@
 package GokiPoker;
-
 public class Main {
 	public static void main(String[] argv) {
 		GameInfo info = new GameInfo();/* ゲーム情報を記憶するフィールド */
