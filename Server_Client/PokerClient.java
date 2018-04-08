@@ -53,7 +53,7 @@ public class PokerClient{
             System.out.print("ニックネームを入力してください: ");
             nickName = sc.next();
             System.out.print("ニックネームが " + nickName + " でよければ 0 を入力してください: ");
-            correctName = (Integer.parseInt(sc.next()) == 0);
+            correctName = (sc.next().equals("0"));
         }
 
         writer.println(nickName);

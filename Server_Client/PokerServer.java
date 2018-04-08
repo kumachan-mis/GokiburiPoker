@@ -23,7 +23,7 @@ public class PokerServer{
         try{
             s = new ServerSocket(PORT);
             System.out.println("準備完了 : " + s + "  プレイヤーの接続待機中...");
-            PokerServerThread.setMainPlayer((new Random()).nextInt(PLAYER));
+            PokerServerThread.setMainPlayerId((new Random()).nextInt(PLAYER));
             threads = new PokerServerThread[PLAYER];
 
             try{
@@ -41,7 +41,6 @@ public class PokerServer{
 
             }catch(IOException e){
                 System.err.println(e);
-                System.out.println("スレッドのsocket.close()に失敗しました.");
             }
 
             try{
@@ -64,25 +63,27 @@ public class PokerServer{
 class PokerServerThread extends Thread{
 
     private static int ready = 0;
-    private static int mainPlayer = 0;
-    
+    private static int mainPlayerId = 0;
+    private  static int loserId = -1;
+
     private Socket socket = null;
     private BufferedReader reader = null;
     private PrintWriter writer = null;;
 
+    private int playerId = -1;
     private String nickName = null;
     private boolean isAvailable = true;
 
     public PokerServerThread(Socket socket) throws IOException{
 
         this.socket = socket;
+
         reader = 
         new BufferedReader(
             new InputStreamReader(
                 socket.getInputStream()
             )
         );
-
         writer = 
         new PrintWriter(
             new BufferedWriter(
@@ -92,30 +93,35 @@ class PokerServerThread extends Thread{
             ), true
         );
 
+        playerId = ready;
         nickName = "Player[" + ready + "]";
         isAvailable = true;
         ready++;
 
         if(ready == PokerServer.PLAYER){
-            System.err.println("ready: " + ready);
             ready = 0;
         }
     }
 
-    public static void setMainPlayer(int mainPlayer){
-        PokerServerThread.mainPlayer = mainPlayer;
+    public static void setMainPlayerId(int mainPlayerId){
+        PokerServerThread.mainPlayerId = mainPlayerId;
     }
-
-    public boolean getIsAvailable(){
-        return isAvailable;
-    }
-
 
     public void run(){
         try{
             initialize();
         }catch(IOException e){
             System.err.println(e);
+        }
+
+        while(true){
+            if(PokerServerThread.mainPlayerId == playerId){
+                if(checkIsLoser(this)){
+                    loserId = playerId;
+                    break;
+                }
+            }
+            pressCard();
         }
     }
 
@@ -138,9 +144,9 @@ class PokerServerThread extends Thread{
 
         String acMessage = nickName + " の登録が完了しました";
         System.out.println(acMessage);
-        writer.println("[サーバ] : " + acMessage);
+        writer.println("[サーバ]: " + acMessage);
         ready++;
-        System.err.println("ready: " + ready);
+
         try{
             while(ready < PokerServer.PLAYER){
                 wait();
@@ -150,5 +156,9 @@ class PokerServerThread extends Thread{
         }
         notifyAll();
         ready = 0;
+    }
+
+    private boolean checkIsLoser(PokerServerThread thread){
+        
     }
 }
