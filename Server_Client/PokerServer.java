@@ -113,16 +113,6 @@ class PokerServerThread extends Thread{
         }catch(IOException e){
             System.err.println(e);
         }
-
-        while(true){
-            if(PokerServerThread.mainPlayerId == playerId){
-                if(checkIsLoser(this)){
-                    loserId = playerId;
-                    break;
-                }
-            }
-            pressCard();
-        }
     }
 
     private synchronized void initialize() throws IOException{
@@ -146,7 +136,11 @@ class PokerServerThread extends Thread{
         System.out.println(acMessage);
         writer.println("[サーバ]: " + acMessage);
         ready++;
+        
+        synchro();
+    }
 
+    private void synchro(){
         try{
             while(ready < PokerServer.PLAYER){
                 wait();
@@ -156,9 +150,5 @@ class PokerServerThread extends Thread{
         }
         notifyAll();
         ready = 0;
-    }
-
-    private boolean checkIsLoser(PokerServerThread thread){
-        
     }
 }
