@@ -196,7 +196,7 @@ class PokerServerThread extends Thread{
     }
 
     private synchronized void receiveNickname(){
-        readSingleMessage(nickName);
+        nickName = readSingleMessage();
         processAC(nickName + " の登録が完了しました");
         synchro();
     }
@@ -249,11 +249,11 @@ class PokerServerThread extends Thread{
             }
 
             writeMultiStrings(strings, PokerServer.PLAYER);
-            readSingleMessage(str);
+            str = readSingleMessage();
             card = Integer.parseInt(str);
-            readSingleMessage(str);
+            str = readSingleMessage();
             say = Integer.parseInt(str);
-            readSingleMessage(str);
+            str = readSingleMessage();
             target = Integer.parseInt(str);
                 
 
@@ -288,7 +288,7 @@ class PokerServerThread extends Thread{
             int pass = -1;
 
             if(ecs){
-                readSingleMessage(str);
+                str = readSingleMessage();
                 pass = str.equals(yes)? 1 : 0;
             }else{
                 pass = 0;
@@ -306,9 +306,9 @@ class PokerServerThread extends Thread{
                 writeMultiStrings(strings, PokerServer.PLAYER);
 
                 int sayAgain = -1, targetAgain = -1;
-                readSingleMessage(str);
+                str = readSingleMessage();
                 sayAgain = Integer.parseInt(str);
-                readSingleMessage(str);
+                str = readSingleMessage();
                 targetAgain = Integer.parseInt(str);
 
                 ret[1] = card;
@@ -319,9 +319,8 @@ class PokerServerThread extends Thread{
             }else if(pass == 0){
                 writer.println(sender);
                 writer.println(say);
-                readSingleMessage(str);
-                String ans = null;
-                readSingleMessage(ans);
+                str = readSingleMessage();
+                String ans = readSingleMessage();
 
                 if((say == card && ans.equals(yes)) || (say != card && ans.equals(no))){
                     writer.println(yes);
@@ -388,8 +387,7 @@ class PokerServerThread extends Thread{
     }
 
     private synchronized void checkIsLoser(){
-        String str = null;
-        readSingleMessage(str);
+        String str = readSingleMessage();
 
         if(str.equals(yes)){
             PokerServer.setMLoserId(playerId);
@@ -420,8 +418,8 @@ class PokerServerThread extends Thread{
         ready = 0;
     }
 
-    private void readSingleMessage(String str){
-        str = null;
+    private String readSingleMessage(){
+        String str = null;
         try{
             while(true){
                 str = reader.readLine();
@@ -432,8 +430,9 @@ class PokerServerThread extends Thread{
         }catch(IOException e){
             System.err.println(e);
             connectionError();
-            return;
+            return null;
         }
+        return str;
     }
 
     private void writeMultiStrings(String[] str, int maxIndex){

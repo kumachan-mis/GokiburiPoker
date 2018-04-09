@@ -45,7 +45,7 @@ public class PokerClient{
 
         while(true){
 
-            readSingleMessage(turnString);
+            turnString = readSingleMessage();
             turn = Integer.parseInt(turnString);
             System.out.println("<Turn  " + turn + " >");
 
@@ -119,19 +119,18 @@ public class PokerClient{
         }
 
         writer.println(str);
-        readSingleMessage(str);
+        str = readSingleMessage();
         System.out.println(str);
     }
 
     private static void receivePlayerInfo(){
-        String str = null;
-        readSingleMessage(str);
+        String str = readSingleMessage();
             
         PLAYER = Integer.parseInt(str);
         nickNames = new String[PLAYER];
-        readMultiMessages(nickNames);
+        nickNames = readMultiMessages(PLAYER);
 
-        readSingleMessage(str);
+        str = readSingleMessage();
         System.out.println(str);
     }
 
@@ -157,17 +156,16 @@ public class PokerClient{
             return;
         }
 
-        readSingleMessage(str);
+        str = readSingleMessage();
         System.out.println(str);
     }
 
     private static void sendPushCard(){
-        String str = null;
-        readSingleMessage(str);
+        String str = readSingleMessage();
 
         if(str.equals(yes)){
             String[] choosables = new String[PLAYER];
-            readMultiMessages(choosables);
+            choosables = readMultiMessages(PLAYER);
 
             System.out.println("押し付ける害虫カード と 宣言する害虫名 と 押し付ける相手 を選びます.");
 
@@ -184,9 +182,9 @@ public class PokerClient{
 
         }else if(str.equals(no)){
 
-            readSingleMessage(str);
+            str = readSingleMessage();
             System.out.println(str);
-            readSingleMessage(str);
+            str = readSingleMessage();
             System.out.println(str);
         }
     }
@@ -305,13 +303,11 @@ public class PokerClient{
     }
 
     private static void sendAction(){
-        String str1 = null; 
-        readSingleMessage(str1);
+        String str1 = readSingleMessage();
 
         if(str1.equals(yes)){
             
-            String str2 = null;
-            readSingleMessage(str2);
+            String str2 = readSingleMessage();
             int pass = -1;
 
             System.out.println("カードを押し付けられてしまいました...");
@@ -351,20 +347,19 @@ public class PokerClient{
 
 
             if(pass == 1){
-                String str = null;
-                readSingleMessage(str);
+                String str = readSingleMessage();
                 int card = Integer.parseInt(str);
                 System.out.println("カードは " + insects[card] + " でした");
 
                 String[] choosables = new String[PLAYER];
-                readMultiMessages(choosables);
+                choosables = readMultiMessages(PLAYER);
+
                 int sayAgain = chooseSayWhat();
                 int targetAgain = chooseToWhom(choosables);
 
             }else if(pass == 0){
-                String str3 = null, str4 = null;
-                readSingleMessage(str3);
-                readSingleMessage(str4);
+                String str3 = readSingleMessage();
+                String str4 = readSingleMessage();
 
                 boolean correctChoice = false;
                 int guess = -1;
@@ -396,41 +391,37 @@ public class PokerClient{
                 }
 
                 writer.println(guess == 0? yes : no);
-                str3 = null;
-                readSingleMessage(str3);
+                str3 = readSingleMessage();
 
                 if(str3.equals(no)){
-                    str4 = null;
-                    readSingleMessage(str4);
+                    str4 = readSingleMessage();
                     fieldCards[Integer.parseInt(str4)]++;
                 }
 
-                str3 = null;
-                readSingleMessage(str3);
+                str3 = readSingleMessage();
                 System.out.println(str3);
 
             }
         }else if(str1.equals("SENDER")){
-            String str2 = null;
-            readSingleMessage(str2);
+            String str2 = readSingleMessage();
             System.out.println(str2);
-            readSingleMessage(str2);
+
+            str2 = readSingleMessage();
 
             String str3 = null;
             if(str2.equals(yes)){
-                readSingleMessage(str3);
+                str3 = readSingleMessage();
                 fieldCards[Integer.parseInt(str3)]++;
             }
 
-            str2 = null;
-            readSingleMessage(str2);
+            str2 = readSingleMessage();
             System.out.println(str2);
 
         }else if(str1.equals(no)){
-            String str2 = null;
-            readSingleMessage(str2);
+            String str2 = readSingleMessage();
             System.out.println(str2);
-            readSingleMessage(str2);
+
+            str2 = readSingleMessage();
             System.out.println(str2);
         }
     }
@@ -460,8 +451,7 @@ public class PokerClient{
     }
 
     private static void showResult(){
-        String result = null;
-        readSingleMessage(result);
+        String result = readSingleMessage();
         System.out.println(result);
     }
 
@@ -470,8 +460,8 @@ public class PokerClient{
         return lowercase.equals("yes") || lowercase.equals("y");
     }
 
-    private static void readSingleMessage(String str){
-        str = null;
+    private static String readSingleMessage(){
+        String str = null;
         try{
             while(true){
                 str = reader.readLine();
@@ -482,11 +472,13 @@ public class PokerClient{
         }catch(IOException e){
             System.err.println(e);
             System.err.println("サーバ " + addr + " との接続が切れました");
-            return;
+            return null;
         }
+        return str;
     }
 
-    private static void readMultiMessages(String[] strings){
+    private static String[] readMultiMessages(int size){
+        String[] strings = new String[size];
         String str = null;
         int i = 0;
         try{
@@ -507,17 +499,11 @@ public class PokerClient{
         }catch(IOException e){
             System.err.println(e);
             System.err.println("サーバ " + addr + " との接続が切れました");
-            return;
+            return null;
         }
-    }
 
-    private static void writeMultiStrings(String[] str, int a, int d, int maxIndex){
-        for(int i = a; i < maxIndex; i += d){
-            writer.println(str[i]);
-        }
-        writer.println(end);
+        return strings;
     }
-
     private static boolean isBreak(String breakMessage){
         String str = null;
         try{
