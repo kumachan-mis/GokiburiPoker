@@ -356,7 +356,8 @@ public class PokerClient{
 
                 int sayAgain = chooseSayWhat();
                 int targetAgain = chooseToWhom(choosables);
-
+                writer.println(sayAgain);
+                writer.println(targetAgain);
             }else if(pass == 0){
                 String str3 = readSingleMessage();
                 String str4 = readSingleMessage();
