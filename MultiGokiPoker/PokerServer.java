@@ -16,6 +16,7 @@ public class PokerServer{
     private static ArrayList<Integer> cardList = new ArrayList<Integer>(); //Kimura: カードのリスト
 
     private static int mainPlayerId = -1;
+    private static int senderId = -1;
     private static int loserId = -1;
 
     public static void main(String[] args) throws IOException{
@@ -33,7 +34,8 @@ public class PokerServer{
         }catch(IOException e){
             System.err.println(e);
         }finally{
-            System.out.println("準備完了 : " + s + "  プレイヤーの接続待機中...");
+            System.out.println("準備完了 : " + s);
+            System.out.println("プレイヤーの接続待機中...");
         }
 
         initializeCardList();
@@ -46,12 +48,13 @@ public class PokerServer{
                 System.err.println(socket);
 
                 if(socket != null){
-                    PokerServerThread th = new PokerServerThread(socket);
+                    PokerServerThread th = new PokerServerThread(socket, n);
                     System.out.println("新しいプレイヤーが参加しました. " + (n + 1) + "/" + PLAYER);
                     th.start();
                     n++;
                 }
             }
+            System.out.println("プレイヤーの募集を終了します.");
 
             try{
                 for(int n = 0; n < PLAYER; n++){
@@ -93,6 +96,14 @@ public class PokerServer{
         return mainPlayerId;
     }
 
+    public static void setSenderId(int id){
+        senderId = id;
+    }
+
+    public static int getSenderId(){
+        return senderId;
+    }
+
     public static void setMLoserId(int id){
         loserId = id;
     }
@@ -105,16 +116,9 @@ public class PokerServer{
 class PokerServerThread extends Thread{
 
     public static PokerServerThread[] playerThreads = null;
-    private static int ready = 0;
-    private static int judged = -1;
-    /*
-    0はmainPlayerがsenderのカードを外したこと
-    1はmainPlayerがsenderのカードを当てたこと
-    2はmainPlayerが新しくsenderになること
-    -1は1ターンが終了していること
-    */
-
-    private static  Integer[] ret = new Integer[3]; //各カード移動での返り値
+    private static ThreadsSynchro synchro = ThreadsSynchro.getInstance();
+    
+    private static  Integer[] ret = new Integer[2]; //各カード移動での返り値
 
     private static final String yes = "YES";
     private static final String no = "NO";
@@ -125,11 +129,11 @@ class PokerServerThread extends Thread{
     private PrintWriter writer = null;
 
     private int playerId = -1;
-    private String nickName = "Player[" + ready + "]";
+    private String nickName;
     private  boolean canSend = true;
     private boolean isAvailable = true;
 
-    public PokerServerThread(Socket socket) throws IOException{
+    public PokerServerThread(Socket socket, int index) throws IOException{
         if(playerThreads == null){
             playerThreads = new PokerServerThread[PokerServer.PLAYER];
         }
@@ -150,18 +154,17 @@ class PokerServerThread extends Thread{
             ), true
         );
 
-        playerId = ready;
-        playerThreads[ready] = this;
-
-        ready++;
-        if(ready == PokerServer.PLAYER){
-            ready = 0;
-        }
+        playerId = index;
+        playerThreads[playerId] = this;
+        nickName = "Player[" + playerId + "]";
     }
 
 
     public void run(){
         int turn = 1;
+
+        synchro.synchro();
+        processAC("全プレイヤーの接続を確認しました");
         receiveNickname();
         sendPlayerInfo();
         sendHandCards();
@@ -170,9 +173,9 @@ class PokerServerThread extends Thread{
             writer.println(turn);
             reseivePushCard(ret);
 
-            while(judged == 2){
+            while(synchro.getJunged() == 2){
                 writer.println("CardMoves");
-                reseiveAction(ret[0], ret[1], ret[2], ret);
+                reseiveAction(ret[0], ret[1], ret);
             }
 
             writer.println("NextTurn");
@@ -195,13 +198,13 @@ class PokerServerThread extends Thread{
         showResult();
     }
 
-    private synchronized void receiveNickname(){
+    private void receiveNickname(){
         nickName = readSingleMessage();
         processAC(nickName + " の登録が完了しました");
-        synchro();
+        synchro.synchro();
     }
 
-    private synchronized void sendPlayerInfo(){
+    private void sendPlayerInfo(){
         writer.println(PokerServer.PLAYER);
         String[] str = new String[PokerServer.PLAYER];
 
@@ -209,12 +212,10 @@ class PokerServerThread extends Thread{
             str[i] = playerThreads[i].nickName;
         }
         writeMultiStrings(str, PokerServer.PLAYER);
-
         processAC("プレイヤーの登録を完了しました");
-        synchro();
     }
 
-    private synchronized void sendHandCards(){
+    private void sendHandCards(){
         int index = playerId;
 
         while(index < PokerServer.INSECTNUM * PokerServer.EACHCARD){
@@ -223,12 +224,10 @@ class PokerServerThread extends Thread{
             index += PokerServer.PLAYER;
         }
         writer.println(end);
-
         processAC("カードを配布しました");
-        synchro();
     }
 
-    private synchronized void reseivePushCard(Integer[] ret){
+    private void reseivePushCard(Integer[] ret){
         int mainPlayerId = PokerServer.getMainPlayerId();
         int card = -1;
         int say = -1;
@@ -237,7 +236,7 @@ class PokerServerThread extends Thread{
         String[] strings = null;
 
         canSend = (playerId != mainPlayerId);
-        synchro();
+        synchro.synchro();
         
         if(playerId == mainPlayerId){
 
@@ -259,22 +258,25 @@ class PokerServerThread extends Thread{
 
             ret[0] = card;
             ret[1] = say;
-            ret[2] = PokerServer.getMainPlayerId();
+            PokerServer.setSenderId(mainPlayerId);
             PokerServer.setMainPlayerId(target);
-            judged = 2;
+            synchro.setJunged(2);
 
         }else{
             writer.println(no);
             processAC(playerThreads[mainPlayerId].nickName + "が行動しています. しばらくお待ちください.");
         }
 
-        synchro();
+        synchro.synchro();
+
+        target = PokerServer.getMainPlayerId();
+        say = ret[1];
         processAC(playerThreads[mainPlayerId].nickName + "が" + PokerServer.insects[say] + "と宣言して" + playerThreads[target].nickName + "にカードを押し付けました");
-        synchro();
     }
 
-    private synchronized void reseiveAction(int card, int say, int sender, Integer[] ret){
+    private void reseiveAction(int card, int say, Integer[] ret){
         int mainPlayerId = PokerServer.getMainPlayerId();
+        int senderId = PokerServer.getSenderId();
         String str = null;
         String[] strings = null;
 
@@ -296,7 +298,7 @@ class PokerServerThread extends Thread{
 
             if(pass == 1){
                 writer.println(card);
-                judged = 2;
+                synchro.setJunged(2);
 
                 strings = new String[PokerServer.PLAYER];
                 for(int i = 0; i < PokerServer.PLAYER; ++i){
@@ -311,51 +313,50 @@ class PokerServerThread extends Thread{
                 str = readSingleMessage();
                 targetAgain = Integer.parseInt(str);
 
-                ret[1] = card;
-                ret[2] = sayAgain;
-                ret[3] = mainPlayerId;
+                ret[0] = card;
+                ret[1] = sayAgain;
+                PokerServer.setSenderId(mainPlayerId);
                 PokerServer.setMainPlayerId(targetAgain);
 
             }else if(pass == 0){
-                writer.println(sender);
+                writer.println(senderId);
                 writer.println(say);
                 str = readSingleMessage();
                 String ans = readSingleMessage();
 
                 if((say == card && ans.equals(yes)) || (say != card && ans.equals(no))){
                     writer.println(yes);
-                    judged = 1;
+                    synchro.setJunged(1);
                     processAC("カードを当てました");
-                    PokerServer.setMainPlayerId(sender);
+                    PokerServer.setMainPlayerId(senderId);
 
                 }else{
                     writer.println(no);
                     writer.println(card);
-                    judged = 0;
+                    synchro.setJunged(0);
                     processAC("カードを外しました");
 
                 }
             }
 
+            ret[0] = -1;
             ret[1] = -1;
-            ret[2] = -1;
-            ret[3] = -1;
 
-        }else if(playerId == sender){
+        }else if(playerId == senderId){
             
             writer.println("SENDER");
             processAC(playerThreads[mainPlayerId].nickName + "が行動しています. しばらくお待ちください.");
 
             while(true){
-                if(judged != -1) break;
+                if(synchro.getJunged() != -1) break;
             }
 
-            if(judged == 1){
+            if(synchro.getJunged() == 1){
                 writer.println(yes);
                 writer.println(card);
                 processAC(playerThreads[mainPlayerId].nickName + "にカードを当てられてしまいました.");
 
-            }else if(judged == 0){
+            }else if(synchro.getJunged() == 0){
                 writer.println(no);
                 processAC(playerThreads[mainPlayerId].nickName + "はカードを外しました.");
 
@@ -366,38 +367,35 @@ class PokerServerThread extends Thread{
             processAC(playerThreads[mainPlayerId].nickName + "が行動しています. しばらくお待ちください.");
         }
 
-        synchro();
+        synchro.synchro();
 
-        if(playerId != mainPlayerId && playerId != sender){
+        if(playerId != mainPlayerId && playerId != senderId){
 
-            if(judged == 1){
-                processAC(playerThreads[mainPlayerId].nickName + "が" + playerThreads[sender].nickName + "の押し付けたカード " + PokerServer.insects[card] + " を当てました");
+            if(synchro.getJunged() == 1){
+                processAC(playerThreads[mainPlayerId].nickName + "が" + playerThreads[senderId].nickName + "の押し付けたカード " + PokerServer.insects[card] + " を当てました");
 
-            }else if(judged == 0){
-                processAC(playerThreads[mainPlayerId].nickName + "が" + playerThreads[sender].nickName + "の押し付けたカードを外しました");
+            }else if(synchro.getJunged() == 0){
+                processAC(playerThreads[mainPlayerId].nickName + "が" + playerThreads[senderId].nickName + "の押し付けたカードを外しました");
             }
 
         }
 
-        if(playerId == sender && judged != 2){
-            judged = -1;
+        if(playerId == senderId && synchro.getJunged() != 2){
+            synchro.setJunged(-1);
         }
-
-        synchro();
     }
 
-    private synchronized void checkIsLoser(){
+    private void checkIsLoser(){
         String str = readSingleMessage();
 
         if(str.equals(yes)){
             PokerServer.setMLoserId(playerId);
         }
-        synchro();
+        synchro.synchro();
     }
 
-    private synchronized void showResult(){
+    private void showResult(){
         processAC(playerThreads[PokerServer.getLoserId()].nickName + "が敗北しました");
-        synchro();
     }
 
     private void processAC(String acMessage){
@@ -405,19 +403,7 @@ class PokerServerThread extends Thread{
         writer.println("[サーバ]: " + acMessage);
     }
 
-    private void synchro(){
-        ready++;
-        try{
-            while(ready > 0 && ready < PokerServer.PLAYER){
-                wait();
-            }
-        }catch(InterruptedException e){
-            System.err.println(e);
-        }
-        notifyAll();
-        ready = 0;
-    }
-
+    
     private String readSingleMessage(){
         String str = null;
         try{
@@ -445,6 +431,9 @@ class PokerServerThread extends Thread{
     private void connectionError(){
         System.err.println("プレイヤー " + nickName + " との接続が切れました");
         isAvailable = false;
+        synchro.addError();
+        synchro.synchro();
+
         try{
             socket.close();
         }catch(IOException e){
@@ -452,12 +441,97 @@ class PokerServerThread extends Thread{
         }
     }
 
-    private synchronized boolean existsCanSend(){//Kimura: 送り先があるかどうかのチェック
+    private boolean existsCanSend(){//Kimura: 送り先があるかどうかのチェック
 		for (int i = 0; i < PokerServer.PLAYER; ++i) {
 			if (playerThreads[i].isAvailable && playerThreads[i].canSend) {
 				return true;
 			}
 		}
 		return false;
-	}
+    }
+    public boolean getIsAvailable(){
+        return isAvailable;
+    }
+}
+
+class ThreadsSynchro{
+
+    private int error;
+    private int judged;
+    boolean in = false, out = true;
+    private int waitnum;
+
+    private static ThreadsSynchro instance = new ThreadsSynchro();
+    public static ThreadsSynchro getInstance() {
+        return instance;
+    }
+
+    private ThreadsSynchro(){
+        error = 0;
+        judged = -1;
+        waitnum = 0;
+    }
+
+    public synchronized void addError(){
+        error++;
+    }
+
+    public synchronized int getError(){
+        return error;
+    }
+
+    public synchronized void setJunged(int judged){
+        this.judged = judged;
+    }
+
+    public synchronized int getJunged(){
+        return judged;
+    }
+
+    private synchronized void in(){
+        try{
+            System.out.println("player : " + PokerServer.PLAYER);
+            if(waitnum == PokerServer.PLAYER - error - 1){
+                waitnum++;
+                out = false;
+                in= true;
+                notifyAll();
+                System.err.println("notifiy: " + waitnum);
+            }
+
+            while(in == false){
+                waitnum++;
+                System.err.println("wait: " + waitnum);
+                wait();
+            }
+        }catch(InterruptedException e){
+            System.err.println(e);
+        }
+    }
+
+    private synchronized void out(){
+        try{
+            System.out.println("player : " + PokerServer.PLAYER);
+            if(waitnum == 1){
+                waitnum--;
+                in = false;
+                out = true;
+                notifyAll();
+                System.err.println("notifiy: " + waitnum);
+            }
+
+            while(out == false){
+                waitnum--;
+                System.err.println("wait: " + waitnum);
+                wait();
+            }
+        }catch(InterruptedException e){
+            System.err.println(e);
+        }
+    }
+
+    public void synchro(){
+        in();
+        out();
+    }
 }
