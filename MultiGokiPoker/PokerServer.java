@@ -124,8 +124,6 @@ class PokerServerThread extends Thread{
 
     public static PokerServerThread[] playerThreads = null; //全クライアント用のスレッドの配列
     private static ThreadsSynchro synchro = ThreadsSynchro.getInstance();
-    
-    private static  Integer[] ret = new Integer[2]; //各カード移動での返り値idex = 0は選んだカードのid, idex = 1は宣言したカードのid
 
     private static final String yes = "YES";
     private static final String no = "NO";
@@ -178,7 +176,7 @@ class PokerServerThread extends Thread{
         
         while(true){
             writer.println(turn);  //送信番号: S2, ターン数を通知
-            reseivePushCard(ret);
+            reseivePushCard();
 
             while(true){
                 int judged = synchro.getJunged();
@@ -186,7 +184,10 @@ class PokerServerThread extends Thread{
                     break;
                 }  //カードの言い当てが行われたらこのターン終了
                 writer.println("CardMoves");  //送信番号: S3-1, カードのたらい回しを通知
-                reseiveAction(ret[0], ret[1], ret);
+
+                int[] ret = new int[2];
+                ret = synchro.getRet();
+                reseiveAction(ret[0], ret[1]);
             }
 
             writer.println("NextTurn");  //送信番号: S3-2, カードの言い当てが行われたことを通知
@@ -238,7 +239,8 @@ class PokerServerThread extends Thread{
         processAC("カードを配布しました");  //送信番号: S11, カード配布の完了を通知
     }
 
-    private void reseivePushCard(Integer[] ret){
+    private void reseivePushCard(){
+        int[] ret = new int[2];
         int mainPlayerId = PokerServer.getMainPlayerId();
         int card = -1;
         int say = -1;
@@ -275,6 +277,8 @@ class PokerServerThread extends Thread{
 
             ret[0] = card;
             ret[1] = say;
+            synchro.setRet(ret);
+
             PokerServer.setSenderId(mainPlayerId);  //直前に押し付けたプレイヤーを自分に
             PokerServer.setMainPlayerId(target);  //次のメインプレイヤーを押し付けた相手に
             synchro.setJunged(2);  //一番最初は必ずカードをたらい回し
@@ -285,12 +289,13 @@ class PokerServerThread extends Thread{
 
         synchro.synchro();
 
-        target = PokerServer.getMainPlayerId();
+        ret = synchro.getRet();
         say = ret[1];
+        target = PokerServer.getMainPlayerId();
         processAC(playerThreads[mainPlayerId].nickName + "が" + PokerServer.insects[say] + "と宣言して" + playerThreads[target].nickName + "にカードを押し付けました");  //送信番号: S15, メインプレイヤーの行動結果を通知
     }
 
-    private void reseiveAction(int card, int say, Integer[] ret){
+    private void reseiveAction(int card, int say){
         int mainPlayerId = PokerServer.getMainPlayerId();
         int senderId = PokerServer.getSenderId();
         String str = null;
@@ -337,8 +342,11 @@ class PokerServerThread extends Thread{
                 str = readSingleMessage();  //受信番号: R7, 押し付ける相手を受信
                 targetAgain = Integer.parseInt(str);
 
+                int[] ret = new int[2];
                 ret[0] = card;
                 ret[1] = sayAgain;
+                synchro.setRet(ret);
+
                 PokerServer.setSenderId(mainPlayerId);  //直前に押し付けたプレイヤーを自分に
                 PokerServer.setMainPlayerId(targetAgain); //メインプレイヤーを押し付けた相手に (*)
                 synchro.setJunged(2);  //状態を「たらい回し」にする
@@ -363,9 +371,6 @@ class PokerServerThread extends Thread{
 
                 }
             }
-
-            ret[0] = -1;
-            ret[1] = -1;
 
         }else if(playerId == senderId){  //直前に押し付けたプレイヤーの時
             synchro.setJunged(-1);  //状態を「不定」にする
@@ -406,7 +411,7 @@ class PokerServerThread extends Thread{
                 int target = PokerServer.getMainPlayerId();//(*)で更新された次のメインプレイヤーを取得
 
                 processAC(playerThreads[mainPlayerId].nickName + " が"  + playerThreads[senderId].nickName + " の押し付けたカードを　" + playerThreads[target].nickName + " に押し付けました　");
-                //送信番号: S30-3, たわい回しであることを通知
+                //送信番号: S30-3, たらい回しであることを通知
 
             }//同期点(**)でメインプレイヤーが状態を変えているから「不定」はありえない(はず)
 
@@ -492,6 +497,7 @@ class ThreadsSynchro{
 
     private int error;  //通信が途切れた人数
     private int judged;  //-1: 不定, 0: 不正解, 1:正解, 2:たらい回し
+    private int[] ret = new int[2]; //本当のカードと宣言を格納
     private boolean in = false;
     private boolean out = true;
     private int waitnum;  //待機している人数
@@ -521,6 +527,14 @@ class ThreadsSynchro{
 
     public synchronized int getJunged(){
         return judged;
+    }
+
+    public synchronized int[] getRet(){
+        return ret;
+    }
+
+    public synchronized void setRet(int[] ret){
+        this.ret = ret;
     }
 
     private synchronized void in(){
