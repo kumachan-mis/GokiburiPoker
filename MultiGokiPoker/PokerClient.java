@@ -353,7 +353,7 @@ public class PokerClient{
             }else if(pass == 0){  //自分で当てる場合
                 String str3 = readSingleMessage();  //受信番号: R20, 押し付けてきた相手を受信
                 String str4 = readSingleMessage();  //受信番号: R21, 相手の宣言を受信
-
+                
                 boolean correctChoice = false;
                 int guess = -1;
 
@@ -399,7 +399,7 @@ public class PokerClient{
             String str2 = readSingleMessage();  //送信番号: R25, 待機の指示を受信
             System.out.println(str2);  //メッセージの表示
 
-            str2 = readSingleMessage();  //受信番号: R26-2 当てられたか外れたかを受信
+            str2 = readSingleMessage();  //受信番号: R26 当てられたか外れたかたらい回しかを受信
 
             String str3 = null;
             if(str2.equals(yes)){

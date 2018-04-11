@@ -21,10 +21,6 @@ public class PokerServer{
     { "コウモリ", "ハエ", "ネズミ", "サソリ", "ゴキブリ", "カエル", "クモ", "カメムシ" };
     private static ArrayList<Integer> cardList = new ArrayList<Integer>(); //Kimura: カードのリスト
 
-    private static int mainPlayerId = -1;  //メインプレイヤーのid
-    private static int senderId = -1;      //直前にカードを押し付けたプレイヤーのid
-    private static int loserId = -1;       //敗者のid
-
     public static void main(String[] args) throws IOException{
 
         if(args.length != 2){
@@ -45,8 +41,6 @@ public class PokerServer{
         }
 
         initializeCardList();
-        mainPlayerId = (new Random()).nextInt(PLAYER);
-        loserId = -1;
 
         try{
             for(int n = 0; n < PLAYER;){
@@ -93,31 +87,6 @@ public class PokerServer{
     public static int getCardList(int index){
         return cardList.get(index);
     }
-
-    public static void setMainPlayerId(int id){
-        mainPlayerId = id;
-    }
-
-    public static int getMainPlayerId(){
-        return mainPlayerId;
-    }
-
-    public static void setSenderId(int id){
-        senderId = id;
-    }
-
-    public static int getSenderId(){
-        return senderId;
-    }
-
-    public static void setLoserId(int id){
-        loserId = id;
-    }
-
-    public static int getLoserId(){
-        return loserId;
-    }
-    //各種ゲッターとセッター
 }
 
 class PokerServerThread extends Thread{
@@ -162,6 +131,10 @@ class PokerServerThread extends Thread{
         playerId = index;
         playerThreads[playerId] = this;
         nickName = "Player[" + playerId + "]";  //デフォルトのニックネーム
+
+        if(playerId == 0){
+            synchro.setMainPlayerId((new Random()).nextInt(PokerServer.PLAYER));
+        }
     }  //各種初期化
 
 
@@ -179,28 +152,34 @@ class PokerServerThread extends Thread{
             reseivePushCard();
 
             while(true){
-                int judged = synchro.getJunged();
-                if(judged == 0 || judged == 1){
+                int judged = synchro.getJudged();
+                synchro.synchro();
+                if(judged != 2){
                     break;
                 }  //カードの言い当てが行われたらこのターン終了
                 writer.println("CardMoves");  //送信番号: S3-1, カードのたらい回しを通知
 
                 int[] ret = new int[2];
                 ret = synchro.getRet();
+                synchro.synchro();
                 reseiveAction(ret[0], ret[1]);
             }
 
             writer.println("NextTurn");  //送信番号: S3-2, カードの言い当てが行われたことを通知
 
             checkIsLoser();  //害虫LIMIT枚負け
-            if(PokerServer.getLoserId() != -1){
+            int loserId = synchro.getLoserId();
+            synchro.synchro();
+            if(loserId != -1){
                 writer.println("GameSet");  //送信番号: S4-1, ゲーム終了を通知
                 break;
             }
             writer.println("Continue");  //送信番号: S4-2, ゲーム継続を通知
 
             checkIsLoser();  //ノーカード負け
-            if(PokerServer.getLoserId() != -1){
+            loserId = synchro.getLoserId();
+            synchro.synchro();
+            if(loserId != -1){
                 writer.println("GameSet");  //送信番号: S5-1, ゲーム終了を通知
                 break;
             }
@@ -241,7 +220,7 @@ class PokerServerThread extends Thread{
 
     private void reseivePushCard(){
         int[] ret = new int[2];
-        int mainPlayerId = PokerServer.getMainPlayerId();
+        int mainPlayerId = synchro.getMainPlayerId();
         int card = -1;
         int say = -1;
         int target = -1;
@@ -279,9 +258,9 @@ class PokerServerThread extends Thread{
             ret[1] = say;
             synchro.setRet(ret);
 
-            PokerServer.setSenderId(mainPlayerId);  //直前に押し付けたプレイヤーを自分に
-            PokerServer.setMainPlayerId(target);  //次のメインプレイヤーを押し付けた相手に
-            synchro.setJunged(2);  //一番最初は必ずカードをたらい回し
+            synchro.setSenderId(mainPlayerId);  //直前に押し付けたプレイヤーを自分に
+            synchro.setMainPlayerId(target);  //次のメインプレイヤーを押し付けた相手に
+            synchro.setJudged(2);  //一番最初は必ずカードをたらい回し
 
         }else{  //メインプレイヤーでないとき
             processAC(playerThreads[mainPlayerId].nickName + "が行動しています. しばらくお待ちください.");  //送信番号: S14, クライアントに待機を通知
@@ -291,13 +270,13 @@ class PokerServerThread extends Thread{
 
         ret = synchro.getRet();
         say = ret[1];
-        target = PokerServer.getMainPlayerId();
+        target = synchro.getMainPlayerId();
         processAC(playerThreads[mainPlayerId].nickName + "が" + PokerServer.insects[say] + "と宣言して" + playerThreads[target].nickName + "にカードを押し付けました");  //送信番号: S15, メインプレイヤーの行動結果を通知
     }
 
     private void reseiveAction(int card, int say){
-        int mainPlayerId = PokerServer.getMainPlayerId();
-        int senderId = PokerServer.getSenderId();
+        int mainPlayerId = synchro.getMainPlayerId();
+        int senderId = synchro.getSenderId();
         String str = null;
         String[] strings = null;
 
@@ -347,48 +326,53 @@ class PokerServerThread extends Thread{
                 ret[1] = sayAgain;
                 synchro.setRet(ret);
 
-                PokerServer.setSenderId(mainPlayerId);  //直前に押し付けたプレイヤーを自分に
-                PokerServer.setMainPlayerId(targetAgain); //メインプレイヤーを押し付けた相手に (*)
-                synchro.setJunged(2);  //状態を「たらい回し」にする
+                synchro.setSenderId(mainPlayerId);  //直前に押し付けたプレイヤーを自分に
+                synchro.setMainPlayerId(targetAgain); //メインプレイヤーを押し付けた相手に (*)
+                synchro.setJudged(2);  //状態を「たらい回し」にする
 
             }else if(pass == 0){  //自分で当てる場合
                 writer.println(senderId);  //送信番号: S20, 押し付けてきた相手を送信
                 writer.println(say);  //送信番号: S21, 相手の宣言を送信
-                str = readSingleMessage();
                 String guess = readSingleMessage();  //受信番号: R8, 予想を受信
 
                 if((say == card && guess.equals(yes)) || (say != card && guess.equals(no))){  //カードが宣言と一緒かどうか当てたら
                     writer.println(yes);  //送信番号: S22-1, 正解を通知
-                    synchro.setJunged(1);  //状態を「正解」にする.
+                    synchro.setJudged(1);  //状態を「正解」にする.
                     processAC("カードを当てました");  //送信番号: S24-1, 正解時の表示用メッセージを送信
-                    PokerServer.setMainPlayerId(senderId);
+                    synchro.setMainPlayerId(senderId);
 
                 }else{
                     writer.println(no);  //送信番号: S22-2, 不正解を通知
                     writer.println(card);  //送信番号: S23, 不正解だったら本当の正解を送信
-                    synchro.setJunged(0);  //状態を「不正解」にする
+                    synchro.setJudged(0);  //状態を「不正解」にする
                     processAC("カードを外しました");  //送信番号: S24-2, 不正解時の表示用メッセージを送信
 
                 }
             }
 
         }else if(playerId == senderId){  //直前に押し付けたプレイヤーの時
-            synchro.setJunged(-1);  //状態を「不定」にする
+            synchro.setJudged(-1);  //状態を「不定」にする
             processAC(playerThreads[mainPlayerId].nickName + "が行動しています. しばらくお待ちください.");  //送信番号: S25, 待機の指示を通知
 
+            int judged = -1;
+
             while(true){
-                if(synchro.getJunged() != -1) break;
+                judged = synchro.getJudged();
+                if(judged != -1) break;
             }  //メインプレイヤーが状態を「不定」から変更するまで待機
 
-            if(synchro.getJunged() == 1){  //状態が「正解」だったら
+            if(judged == 1){  //状態が「正解」だったら
                 writer.println(yes);  //送信番号: S26-1, 当てられてしまったことを通知
                 writer.println(card);  //送信番号: S27,  当てられたら, 当てられたカードを送信
                 processAC(playerThreads[mainPlayerId].nickName + "にカードを当てられてしまいました.");  //送信番号: S28-1, 正解時の表示用のメッセージを送信
 
-            }else if(synchro.getJunged() == 0){  //状態が「不正解」だったら
+            }else if(judged == 0){  //状態が「不正解」だったら
                 writer.println(no);  //送信番号: S26-2 外れたことを通知
                 processAC(playerThreads[mainPlayerId].nickName + "はカードを外しました.");  //送信番号: S28-2, 不正解時の表示用のメッセージを送信
 
+            }else{
+                writer.println("PASSED");  //送信番号: S26-3 たらい回しになったことを通知
+                processAC(playerThreads[mainPlayerId].nickName + "はカードを判定を見送ってカードを見ました");  //送信番号: S28-3, たらい回し時の表示用のメッセージを送信
             }
 
         }else{  //何事もないプレイヤーのとき
@@ -398,42 +382,42 @@ class PokerServerThread extends Thread{
         synchro.synchro();  //同期点(**)
 
         if(playerId != mainPlayerId && playerId != senderId){   //何事もないプレイヤーのとき
-
-            if(synchro.getJunged() == 1){
+            int judged = synchro.getJudged();
+            if(judged == 1){
                 processAC(playerThreads[mainPlayerId].nickName + " が " + playerThreads[senderId].nickName + " の押し付けたカード " + PokerServer.insects[card] + " を当てました");
                 //送信番号: S30-1, カードの判定が正解であることを通知
 
-            }else if(synchro.getJunged() == 0){
+            }else if(judged == 0){
                 processAC(playerThreads[mainPlayerId].nickName + " が " + playerThreads[senderId].nickName + "の押し付けたカードを外しました");
                 //送信番号: S30-2, カードの判定が正解であることを通知
 
             }else{
-                int target = PokerServer.getMainPlayerId();//(*)で更新された次のメインプレイヤーを取得
+                int target = synchro.getMainPlayerId();//(*)で更新された次のメインプレイヤーを取得
 
                 processAC(playerThreads[mainPlayerId].nickName + " が"  + playerThreads[senderId].nickName + " の押し付けたカードを　" + playerThreads[target].nickName + " に押し付けました　");
                 //送信番号: S30-3, たらい回しであることを通知
 
             }//同期点(**)でメインプレイヤーが状態を変えているから「不定」はありえない(はず)
-
-
         }
 
-        if(playerId == senderId && synchro.getJunged() != 2){
-            synchro.setJunged(-1);  //「たらい回し」でなければ状態を「不定」に
+        if(synchro.getJudged() != 2){
+            synchro.setJudged(-1);  //「たらい回し」でなければ状態を「不定」に
         }
+        //System.err.println("actionEnd: " + nickName);
+        synchro.synchro();
     }
 
     private void checkIsLoser(){
         String str = readSingleMessage();  //受信番号R9: 敗者かどうかを受信. 敗者が同時に複数出ることはない(はず)
 
         if(str.equals(yes)){
-            PokerServer.setLoserId(playerId);  
+            synchro.setLoserId(playerId);  
         }
         synchro.synchro();
     }
 
     private void showResult(){
-        processAC(playerThreads[PokerServer.getLoserId()].nickName + "が敗北しました");
+        processAC(playerThreads[synchro.getLoserId()].nickName + "が敗北しました");
     }
 
     private void processAC(String acMessage){
@@ -495,6 +479,10 @@ class PokerServerThread extends Thread{
 
 class ThreadsSynchro{
 
+    private int mainPlayerId;  //メインプレイヤーのid
+    private int senderId;      //直前にカードを押し付けたプレイヤーのid
+    private int loserId;       //敗者のid
+
     private int error;  //通信が途切れた人数
     private int judged;  //-1: 不定, 0: 不正解, 1:正解, 2:たらい回し
     private int[] ret = new int[2]; //本当のカードと宣言を格納
@@ -508,9 +496,37 @@ class ThreadsSynchro{
     }
 
     private ThreadsSynchro(){
+        mainPlayerId = -1;
+        senderId = -1;
+        loserId = -1;
+
         error = 0;
         judged = -1;
         waitnum = 0;
+    }
+
+    public synchronized void setMainPlayerId(int id){
+        mainPlayerId = id;
+    }
+
+    public synchronized int getMainPlayerId(){
+        return mainPlayerId;
+    }
+
+    public synchronized void setSenderId(int id){
+        senderId = id;
+    }
+
+    public synchronized  int getSenderId(){
+        return senderId;
+    }
+
+    public synchronized void setLoserId(int id){
+        loserId = id;
+    }
+
+    public synchronized int getLoserId(){
+        return loserId;
     }
 
     public synchronized void addError(){
@@ -521,11 +537,11 @@ class ThreadsSynchro{
         return error;
     }
 
-    public synchronized void setJunged(int judged){
+    public synchronized void setJudged(int judged){
         this.judged = judged;
     }
 
-    public synchronized int getJunged(){
+    public synchronized int getJudged(){
         return judged;
     }
 
@@ -539,18 +555,17 @@ class ThreadsSynchro{
 
     private synchronized void in(){
         try{
-            System.out.println("player : " + PokerServer.PLAYER);
             if(waitnum == PokerServer.PLAYER - error - 1){
                 waitnum++;
                 out = false;
                 in= true;
                 notifyAll();
-                System.err.println("notifiy: " + waitnum);
+                //System.err.println("notifiy: " + waitnum);
             }
 
             while(in == false){
                 waitnum++;
-                System.err.println("wait: " + waitnum);
+                //System.err.println("wait: " + waitnum);
                 wait();
             }
         }catch(InterruptedException e){
@@ -560,18 +575,18 @@ class ThreadsSynchro{
 
     private synchronized void out(){
         try{
-            System.out.println("player : " + PokerServer.PLAYER);
+            //System.out.println("player : " + PokerServer.PLAYER);
             if(waitnum == 1){
                 waitnum--;
                 in = false;
                 out = true;
                 notifyAll();
-                System.err.println("notifiy: " + waitnum);
+                //System.err.println("notifiy: " + waitnum);
             }
 
             while(out == false){
                 waitnum--;
-                System.err.println("wait: " + waitnum);
+                //System.err.println("wait: " + waitnum);
                 wait();
             }
         }catch(InterruptedException e){
@@ -582,5 +597,6 @@ class ThreadsSynchro{
     public void synchro(){
         in();
         out();
+        System.out.println("synchronized");
     }  //同期処理
 }
