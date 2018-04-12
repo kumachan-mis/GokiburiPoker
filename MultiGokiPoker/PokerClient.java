@@ -467,6 +467,7 @@ public class PokerClient{
         for(int p = 0; p < PLAYER; ++p){
             System.out.println(nickNames[p] + " が今まで押し付けられてしまった害虫カードは");
             showFieldCards(p);
+            System.out.println();
         }
 
         System.out.println("です. 確認できたら y を押してください.");
