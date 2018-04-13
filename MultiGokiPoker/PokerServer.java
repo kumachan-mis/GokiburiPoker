@@ -341,14 +341,14 @@ class PokerServerThread extends Thread{
                     writer.println(yes);  //送信番号: S22-1, 正解を通知
                     writer.println(card);  //送信番号: S23-1, 正解を送信
                     synchro.setJudged(1);  //状態を「正解」にする.
-                    processAC("カードを当てました");  //送信番号: S24-1, 正解時の表示用メッセージを送信
+                    processAC("カードを当てました. 本当のカードは " + PokerServer.insects[card] + " です.");  //送信番号: S24-1, 正解時の表示用メッセージを送信
                     synchro.setMainPlayerId(senderId);
 
                 }else{
                     writer.println(no);  //送信番号: S22-2, 不正解を通知
                     writer.println(card);  //送信番号: S23-2, 本当の正解を送信
                     synchro.setJudged(0);  //状態を「不正解」にする
-                    processAC("カードを外しました. 本当のカードは" + PokerServer.insects[card] + "です.");  //送信番号: S24-2, 不正解時の表示用メッセージを送信
+                    processAC("カードを外しました. 本当のカードは " + PokerServer.insects[card] + " です.");  //送信番号: S24-2, 不正解時の表示用メッセージを送信
 
                 }
             }

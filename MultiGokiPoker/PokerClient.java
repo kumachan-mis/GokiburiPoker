@@ -586,24 +586,10 @@ public class PokerClient{
     }  //複数データ受信
 
     private static boolean isBreak(String breakMessage){
-        String str = null;
-        try{
-            while(true){
-                str = reader.readLine();
-                if(str != null){
-                    break;
-                }
-            }
-
-            if(str.equals(breakMessage)){
-                return true;
-            }else{
-                return false;
-            }
-
-        }catch(IOException e){
-            System.err.println(e);
-            System.err.println("サーバ " + addr + " との接続が切れました");
+        String str = readSingleMessage();
+        if(str.equals(breakMessage)){
+            return true;
+        }else{
             return false;
         }
     }  //無限ループを抜けるかどうか
