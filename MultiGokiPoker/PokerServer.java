@@ -265,7 +265,7 @@ class PokerServerThread extends Thread{
             synchro.setJudged(2);  //一番最初は必ずカードをたらい回し
 
         }else{  //メインプレイヤーでないとき
-            processAC(playerThreads[mainPlayerId].nickName + "が行動しています. しばらくお待ちください.");  //送信番号: S14, クライアントに待機を通知
+            processAC(playerThreads[mainPlayerId].nickName + " が行動しています. しばらくお待ちください.");  //送信番号: S14, クライアントに待機を通知
         }
 
         synchro.synchro();
@@ -273,7 +273,7 @@ class PokerServerThread extends Thread{
         ret = synchro.getRet();
         say = ret[1];
         target = synchro.getMainPlayerId();
-        processAC(playerThreads[mainPlayerId].nickName + "が" + PokerServer.insects[say] + "と宣言して" + playerThreads[target].nickName + "にカードを押し付けました");  //送信番号: S15, メインプレイヤーの行動結果を通知
+        processAC(playerThreads[mainPlayerId].nickName + " が " + PokerServer.insects[say] + " と宣言して " + playerThreads[target].nickName + " にカードを押し付けました");  //送信番号: S15, メインプレイヤーの行動結果を通知
     }
 
     private void reseiveAction(int card, int say){
@@ -367,13 +367,13 @@ class PokerServerThread extends Thread{
             if(judged == 1){  //状態が「正解」だったら
                 writer.println(yes);  //送信番号: S26-1, 当てられてしまったことを通知
                 writer.println(card);  //送信番号: S27,  当てられたカードを送信
-                processAC(playerThreads[mainPlayerId].nickName + "にカードを当てられてしまいました.");  //送信番号: S28-1, 正解時の表示用のメッセージを送信
+                processAC(playerThreads[mainPlayerId].nickName + " にカードを当てられてしまいました.");  //送信番号: S28-1, 正解時の表示用のメッセージを送信
 
             }else if(judged == 0){  //状態が「不正解」だったら
                 writer.println(no);  //送信番号: S26-2, 外れたことを通知
                 writer.println(card);  //送信番号: S34,  外してくれたカードを送信
                 writer.println(mainPlayerId);  //送信番号: S35, 押し付けた相手を送信
-                processAC(playerThreads[mainPlayerId].nickName + "はカードを外しました.");  //送信番号: S28-2, 不正解時の表示用のメッセージを送信
+                processAC(playerThreads[mainPlayerId].nickName + " はカードを外しました.");  //送信番号: S28-2, 不正解時の表示用のメッセージを送信
 
             }else{
                 writer.println("PASSED");  //送信番号: S26-3, たらい回しになったことを通知
@@ -409,7 +409,7 @@ class PokerServerThread extends Thread{
                 int target = synchro.getMainPlayerId();  //(*)で更新された次のメインプレイヤーを取得
                 int[] ret = new int[2];
                 ret = synchro.getRet();
-                processAC(playerThreads[mainPlayerId].nickName + " が"  + playerThreads[senderId].nickName + " の押し付けたカードを " + PokerServer.insects[ret[1]] + " と宣言して " + playerThreads[target].nickName + " に押し付けました");
+                processAC(playerThreads[mainPlayerId].nickName + " が "  + playerThreads[senderId].nickName + " の押し付けたカードを " + PokerServer.insects[ret[1]] + " と宣言して " + playerThreads[target].nickName + " に押し付けました");
                 //送信番号: S30-3, たらい回しであることを通知
 
             }//同期点(**)でメインプレイヤーが状態を変えているから「不定」はありえない(はず)
@@ -432,7 +432,7 @@ class PokerServerThread extends Thread{
     }
 
     private void showResult(){
-        processAC(playerThreads[synchro.getLoserId()].nickName + "が敗北しました");
+        processAC(playerThreads[synchro.getLoserId()].nickName + " が敗北しました");
     }
 
     private void processAC(String acMessage){
