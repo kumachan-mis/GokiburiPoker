@@ -584,19 +584,19 @@ public class PokerClient{
 
     private static void showHandCards() {//Kimura : 手持ちのカードを可視化
 		for(int i = 0; i < INSECTNUM; i++){
-			System.out.println("(" + i + ")" + insects[i] + ":" + handCards[i] + "枚");
+			System.out.println("(" + i + ")" + String.format("%-4s", insects[i]) + "\t:" + handCards[i] + "枚");
 		}
     }
 
     private static void showFieldCards(int p) {//Kimura : 場のカードを可視化
 		for(int i = 0; i < INSECTNUM; i++){
-			System.out.println("(" + i + ")" + insects[i] + ":" + fieldCards[p][i] + "枚");
+			System.out.println("(" + i + ")" + String.format("%-4s", insects[i]) + "\t:" + fieldCards[p][i] + "枚");
 		}
     }
 
     private static void showInsects() {
 		for(int i = 0; i < INSECTNUM; i++){
-			System.out.println("(" + i + ")" + insects[i] + " ");
+			System.out.println("(" + i + ")" + insects[i]);
 		}
     }  //害虫カードの種類を全て表示
 
