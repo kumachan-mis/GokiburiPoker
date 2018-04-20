@@ -1,163 +1,161 @@
-package Test;
-
 import processing.core.PApplet;
 import processing.core.PFont;
 
 public class Test extends PApplet {
 
-	int err = 0;// ƒGƒ‰[•\¦ƒXƒCƒbƒ`—p•Ï”
+	int err = 0;// ã‚¨ãƒ©ãƒ¼è¡¨ç¤ºã‚¹ã‚¤ãƒƒãƒç”¨å¤‰æ•°
 	static boolean start = false;
-	int WIDE = 900, HIGHT = 800;// ƒEƒBƒ“ƒhƒEƒTƒCƒY
-	static GameInfo info = new GameInfo();/* ƒQ[ƒ€î•ñ‚ğ‹L‰¯‚·‚éƒtƒB[ƒ‹ƒh */
+	int WIDE = 900, HIGHT = 800;// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚µã‚¤ã‚º
+	static GameInfo info = new GameInfo();/* ã‚²ãƒ¼ãƒ æƒ…å ±ã‚’è¨˜æ†¶ã™ã‚‹ãƒ•ã‚£ãƒ¼ãƒ«ãƒ‰ */
 	public int[] color = { color(100, 0, 255), color(255, 150, 0), color(30, 45, 60), color(255, 0, 60),
 			color(140, 60, 0), color(70, 240, 50), color(230, 255, 0), color(0, 255, 200) };
-	// ŠQ’‚ÌF
-	// ƒRƒEƒ‚ƒŠ¨0AƒnƒG¨1AƒlƒYƒ~¨2AƒTƒ\ƒŠ¨3AƒSƒLƒuƒŠ¨4AƒJƒGƒ‹¨5AƒNƒ‚¨6AƒJƒƒ€ƒV¨7
-	int sw = 0;// s“®ƒXƒCƒbƒ`—p•Ï”
+	// å®³è™«ã®è‰²
+	// ã‚³ã‚¦ãƒ¢ãƒªâ†’0ã€ãƒã‚¨â†’1ã€ãƒã‚ºãƒŸâ†’2ã€ã‚µã‚½ãƒªâ†’3ã€ã‚´ã‚­ãƒ–ãƒªâ†’4ã€ã‚«ã‚¨ãƒ«â†’5ã€ã‚¯ãƒ¢â†’6ã€ã‚«ãƒ¡ãƒ ã‚·â†’7
+	int sw = 0;// è¡Œå‹•ã‚¹ã‚¤ãƒƒãƒç”¨å¤‰æ•°
 
-	public void settings() {// ƒEƒBƒ“ƒhƒE‚Ì‰Šúİ’è
+	public void settings() {// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®åˆæœŸè¨­å®š
 		size(WIDE, HIGHT);
-		noLoop();// draw()‚ğˆê‰ñ‚¸‚Â•\¦‚·‚é
+		noLoop();// draw()ã‚’ä¸€å›ãšã¤è¡¨ç¤ºã™ã‚‹
 	}
 
-	public void setup() {// ‚»‚Ì‘¼‰Šúİ’è
+	public void setup() {// ãã®ä»–åˆæœŸè¨­å®š
 		colorMode(RGB, 256);
 		background(0, 130, 45);
 		smooth();
-		PFont font = createFont("ƒƒCƒŠƒI", 30);
+		PFont font = createFont("ãƒ¡ã‚¤ãƒªã‚ª", 30);
 		textFont(font);
 	}
 
-	public void draw() {// ƒƒCƒ“
+	public void draw() {// ãƒ¡ã‚¤ãƒ³
 
-		if (start) {// ƒQ[ƒ€‚ªŠJn‚µ‚Ä‚¢‚é‚È‚ç
+		if (start) {// ã‚²ãƒ¼ãƒ ãŒé–‹å§‹ã—ã¦ã„ã‚‹ãªã‚‰
 			info.Player();
 			info.Field();
-			background(0, 130, 45);// ”wŒi‚Ìã‘‚«
-			Turn();// ƒ^[ƒ“•\¦
-			MyHand();// ©•ª‚ÌèD‚Ì•\¦
-			MyField();// ©•ª‚Ìê‚Ì•\¦
-			EHand();// “G‚ÌèD‚Ì•\¦
-			EField();// “G‚Ìê‚Ì•\¦
-		} else {// ƒQ[ƒ€‚ªŠJn‚µ‚Ä‚¢‚È‚¢‚È‚ç
+			background(0, 130, 45);// èƒŒæ™¯ã®ä¸Šæ›¸ã
+			Turn();// ã‚¿ãƒ¼ãƒ³è¡¨ç¤º
+			MyHand();// è‡ªåˆ†ã®æ‰‹æœ­ã®è¡¨ç¤º
+			MyField();// è‡ªåˆ†ã®å ´ã®è¡¨ç¤º
+			EHand();// æ•µã®æ‰‹æœ­ã®è¡¨ç¤º
+			EField();// æ•µã®å ´ã®è¡¨ç¤º
+		} else {// ã‚²ãƒ¼ãƒ ãŒé–‹å§‹ã—ã¦ã„ãªã„ãªã‚‰
 			fill(0);
 			textAlign(CENTER, CENTER);
-			text("ƒvƒŒƒCƒ„[‚ªW‚Ü‚é‚Ü‚Å‚¨‘Ò‚¿‚­‚¾‚³‚¢...", WIDE / 2, HIGHT / 2);
+			text("ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ãŒé›†ã¾ã‚‹ã¾ã§ãŠå¾…ã¡ãã ã•ã„...", WIDE / 2, HIGHT / 2);
 		}
 
-		InputF();// ‘€ì“ü—Í—p˜g•\¦
-		switch (sw) {// ‘€ì•ªŠò
+		InputF();// æ“ä½œå…¥åŠ›ç”¨æ è¡¨ç¤º
+		switch (sw) {// æ“ä½œåˆ†å²
 		case 0:
-			WhichCard();// èD‚©‚ç‘—‚éƒJ[ƒh‚ğ‘I‘ğ
+			WhichCard();// æ‰‹æœ­ã‹ã‚‰é€ã‚‹ã‚«ãƒ¼ãƒ‰ã‚’é¸æŠ
 			break;
 
 		case 1:
-			WhoSend();// ƒJ[ƒh‚Ì‘—‚èæ‚ğ‘I‘ğ
+			WhoSend();// ã‚«ãƒ¼ãƒ‰ã®é€ã‚Šå…ˆã‚’é¸æŠ
 			break;
 
 		case 2:
-			WhatSay();// ƒJ[ƒh‚ÌéŒ¾‚ğ‘I‘ğ
+			WhatSay();// ã‚«ãƒ¼ãƒ‰ã®å®£è¨€ã‚’é¸æŠ
 			break;
 
 		case 3:
-			Recieve();// ƒJ[ƒhó‚¯æ‚è‚Ìs“®‚ğ‘I‘ğ
+			Recieve();// ã‚«ãƒ¼ãƒ‰å—ã‘å–ã‚Šæ™‚ã®è¡Œå‹•ã‚’é¸æŠ
 			break;
 
 		case 4:
-			Open();// ƒJ[ƒh‚ğ“–‚Ä‚é‚Æ‚«‚Ìs“®‚ğ‘I‘ğ
+			Open();// ã‚«ãƒ¼ãƒ‰ã‚’å½“ã¦ã‚‹ã¨ãã®è¡Œå‹•ã‚’é¸æŠ
 			break;
 
 		case 5:
-			Answer();// ƒJ[ƒh‚ğ‘—‚é‚Æ‚«‚Ì•\–ÊŠm”F
+			Answer();// ã‚«ãƒ¼ãƒ‰ã‚’é€ã‚‹ã¨ãã®è¡¨é¢ç¢ºèª
 			break;
 
 		case 6:
-			OK();// ƒJ[ƒh‚ğ“–‚Ä‚½‚Æ‚«‚Ì•\¦
+			OK();// ã‚«ãƒ¼ãƒ‰ã‚’å½“ã¦ãŸã¨ãã®è¡¨ç¤º
 			break;
 
 		case 7:
-			NG();// ƒJ[ƒh‚ğŠO‚µ‚½‚Æ‚«‚Ì•\¦
+			NG();// ã‚«ãƒ¼ãƒ‰ã‚’å¤–ã—ãŸã¨ãã®è¡¨ç¤º
 			break;
 
-		case 8:// èDØ‚ê‚ÅI‚í‚è
+		case 8:// æ‰‹æœ­åˆ‡ã‚Œã§çµ‚ã‚ã‚Š
 			info.EndA();
 			strokeWeight(1);
 			fill(255, 0, 0);
 			textAlign(CENTER);
 			textSize(30);
-			text("èD‚ª‚ ‚è‚Ü‚¹‚ñI", WIDE / 2, 250);
+			text("æ‰‹æœ­ãŒã‚ã‚Šã¾ã›ã‚“ï¼", WIDE / 2, 250);
 			textSize(45);
-			text("player" + (info.P + 1) + "‚Ì•‰‚¯‚Å‚·I", WIDE / 2, 300);
+			text("player" + (info.P + 1) + "ã®è² ã‘ã§ã™ï¼", WIDE / 2, 300);
 			textSize(25);
-			text("ƒQ[ƒ€‚ğI—¹‚µ‚Ü‚·B", WIDE / 2, 350);
+			text("ã‚²ãƒ¼ãƒ ã‚’çµ‚äº†ã—ã¾ã™ã€‚", WIDE / 2, 350);
 			break;
 
-		case 9:// 4–‡‚»‚ë‚Á‚ÄI‚í‚è
+		case 9:// 4æšãã‚ã£ã¦çµ‚ã‚ã‚Š
 			info.EndB();
 			strokeWeight(1);
 			fill(255, 0, 0);
 			textAlign(CENTER);
 			textSize(30);
-			text("player" + (info.P + 1) + "‚Ìê‚É" + info.Name[info.Num] + "‚ÌƒJ[ƒh‚ª4–‡‚É‚È‚è‚Ü‚µ‚½I", WIDE / 2, 250);
+			text("player" + (info.P + 1) + "ã®å ´ã«" + info.Name[info.Num] + "ã®ã‚«ãƒ¼ãƒ‰ãŒ4æšã«ãªã‚Šã¾ã—ãŸï¼", WIDE / 2, 250);
 			textSize(45);
-			text("player" + (info.P + 1) + "‚Ì•‰‚¯‚Å‚·I", WIDE / 2, 300);
+			text("player" + (info.P + 1) + "ã®è² ã‘ã§ã™ï¼", WIDE / 2, 300);
 			textSize(25);
-			text("ƒQ[ƒ€‚ğI—¹‚µ‚Ü‚·B", WIDE / 2, 350);
+			text("ã‚²ãƒ¼ãƒ ã‚’çµ‚äº†ã—ã¾ã™ã€‚", WIDE / 2, 350);
 			break;
 		}
 
-		switch (err) {// ƒGƒ‰[•\¦•ªŠò
+		switch (err) {// ã‚¨ãƒ©ãƒ¼è¡¨ç¤ºåˆ†å²
 
-		case 1:// èDØ‚ê
+		case 1:// æ‰‹æœ­åˆ‡ã‚Œ
 			strokeWeight(1);
 			fill(255, 0, 0);
 			textAlign(CENTER);
 			textSize(20);
-			text("‚»‚ÌƒJ[ƒh‚ÍèD‚É‚ ‚è‚Ü‚¹‚ñ", WIDE / 2, 280);
-			System.out.println("‚»‚ÌƒJ[ƒh‚Í‚Á‚Ä‚¢‚Ü‚¹‚ñ");
+			text("ãã®ã‚«ãƒ¼ãƒ‰ã¯æ‰‹æœ­ã«ã‚ã‚Šã¾ã›ã‚“", WIDE / 2, 280);
+			System.out.println("ãã®ã‚«ãƒ¼ãƒ‰ã¯æŒã£ã¦ã„ã¾ã›ã‚“");
 			err = 0;
 			break;
 
-		case 2:// ‘—‚ê‚È‚¢‘Šè
+		case 2:// é€ã‚Œãªã„ç›¸æ‰‹
 			strokeWeight(1);
 			fill(255, 0, 0);
 			textAlign(CENTER);
 			textSize(20);
-			text("‚»‚ÌƒvƒŒƒCƒ„[‚É‚Í‘—‚ê‚Ü‚¹‚ñ", WIDE / 2, 280);
-			System.out.println("‚»‚ÌƒvƒŒƒCƒ„[‚É‚Í‘—‚ê‚Ü‚¹‚ñ");
+			text("ãã®ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã«ã¯é€ã‚Œã¾ã›ã‚“", WIDE / 2, 280);
+			System.out.println("ãã®ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã«ã¯é€ã‚Œã¾ã›ã‚“");
 			err = 0;
 			break;
 
-		case 3:// ‘—‚ê‚é‘Šè‚ªˆêl‚à‚¢‚È‚¢
+		case 3:// é€ã‚Œã‚‹ç›¸æ‰‹ãŒä¸€äººã‚‚ã„ãªã„
 			strokeWeight(1);
 			fill(255, 0, 0);
 			textAlign(CENTER);
 			textSize(20);
-			text("‘—‚ê‚éƒvƒŒƒCƒ„[‚ª‚¢‚Ü‚¹‚ñ", WIDE / 2, 280);
-			System.out.println("‘—‚ê‚éƒvƒŒƒCƒ„[‚ª‚¢‚Ü‚¹‚ñ");
+			text("é€ã‚Œã‚‹ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ãŒã„ã¾ã›ã‚“", WIDE / 2, 280);
+			System.out.println("é€ã‚Œã‚‹ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ãŒã„ã¾ã›ã‚“");
 			err = 0;
 			break;
 		}
 
 	}
 
-	public void Turn() {// ƒ^[ƒ“•\¦
+	public void Turn() {// ã‚¿ãƒ¼ãƒ³è¡¨ç¤º
 		fill(0);
 		textAlign(CENTER);
 		textSize(30);
 		text("Turn" + info.turns + " player" + (info.P + 1), WIDE / 2, 450);
 	}
 
-	public void MyHand() {// ©•ª‚ÌèD‚Ì•\¦
+	public void MyHand() {// è‡ªåˆ†ã®æ‰‹æœ­ã®è¡¨ç¤º
 		int j = 0, sum = 0;
 		for (int i = 0; i < 8; i++) {
 			fill(color[i]);
 			strokeWeight(1);
 			while (j < info.Hand[info.P][i]) {
-				if (info.Hand[info.P][8] % 2 == 1) {// èD‚ªŠï”‚Ì
+				if (info.Hand[info.P][8] % 2 == 1) {// æ‰‹æœ­ãŒå¥‡æ•°ã®æ™‚
 					rectMode(CENTER);
 					rect((WIDE / 2) + (sum - info.Hand[info.P][8] / 2) * 35, 700, 70, 100);
-				} else {// ‹ô”‚Ì
+				} else {// å¶æ•°ã®æ™‚
 					rectMode(CORNER);
 					rect((WIDE / 2) - 18 + (sum - info.Hand[info.P][8] / 2) * 35, 650, 70, 100);
 				}
@@ -172,7 +170,7 @@ public class Test extends PApplet {
 		text("player" + (info.P + 1), WIDE / 2, 785);
 	}
 
-	public void MyField() {// ©•ª‚Ìê‚Ì•\¦
+	public void MyField() {// è‡ªåˆ†ã®å ´ã®è¡¨ç¤º
 		int j = 0;
 		for (int i = 0; i < 8; i++) {
 			fill(color[i]);
@@ -186,17 +184,17 @@ public class Test extends PApplet {
 		}
 	}
 
-	public void EHand() {// “G‚ÌèD‚Ì”‚ğ•\¦
+	public void EHand() {// æ•µã®æ‰‹æœ­ã®æ•°ã‚’è¡¨ç¤º
 		int i = 1;
 		for (int p = 0; p < info.player; p++) {
 			if (p != info.P) {
 				for (int j = 0; j < info.Hand[p][8]; j++) {
 					fill(255, 255, 255);
 					strokeWeight(1);
-					if (info.Hand[p][8] % 2 == 1) {// èD‚ªŠï”‚Ì
+					if (info.Hand[p][8] % 2 == 1) {// æ‰‹æœ­ãŒå¥‡æ•°ã®æ™‚
 						rectMode(CENTER);
 						rect((WIDE * (2 * i - 1) / 6) + (j - info.Hand[p][8] / 2) * 10, 75, 35, 50);
-					} else {// ‹ô”‚Ì
+					} else {// å¶æ•°ã®æ™‚
 						rectMode(CORNER);
 						rect((WIDE * (2 * i - 1) / 6) - 8 + (j - info.Hand[p][8] / 2) * 10, 50, 35, 50);
 					}
@@ -212,7 +210,7 @@ public class Test extends PApplet {
 		}
 	}
 
-	public void EField() {// “G‚Ìê‚Ì•\¦
+	public void EField() {// æ•µã®å ´ã®è¡¨ç¤º
 		int k = 1;
 		for (int p = 0; p < info.player; p++) {
 			if (p != info.P) {
@@ -232,40 +230,40 @@ public class Test extends PApplet {
 		}
 	}
 
-	public void InputF() {// ‘€ì—p‹^—ƒEƒBƒ“ƒhƒE‚Ì•\¦—p”wŒi
+	public void InputF() {// æ“ä½œç”¨ç–‘ä¼¼ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®è¡¨ç¤ºç”¨èƒŒæ™¯
 		rectMode(CORNER);
 		strokeWeight(3);
 		fill(0, 90, 30);
 		rect(0, 200, 900, 220);
 	}
 
-	public void WhichCard() {// ‘—‚éèD‚Ì‘I‘ğ
+	public void WhichCard() {// é€ã‚‹æ‰‹æœ­ã®é¸æŠ
 		strokeWeight(1);
 		fill(0);
 		textAlign(CENTER);
 		textSize(30);
-		text("‘—‚éƒJ[ƒh‚ğ‘I‚ñ‚Å‚­‚¾‚³‚¢", WIDE / 2, 250);
+		text("é€ã‚‹ã‚«ãƒ¼ãƒ‰ã‚’é¸ã‚“ã§ãã ã•ã„", WIDE / 2, 250);
 		info.ShowHand();
 		for (int i = 0; i < 8; i++) {
 			fill(color[i]);
 			rectMode(CORNER);
 			strokeWeight(1);
 			rect((WIDE / 8 * i) + 25, 300, 70, 100);
-			if (info.Hand[info.P][i] == 0) {// ‚à‚µèD‚É‚È‚©‚Á‚½‚ç
+			if (info.Hand[info.P][i] == 0) {// ã‚‚ã—æ‰‹æœ­ã«ãªã‹ã£ãŸã‚‰
 				strokeWeight(3);
 				fill(0);
-				line((WIDE / 8 * i) + 25, 300, (WIDE / 8 * i) + 95, 400);// ‚»‚ÌƒJ[ƒh‚É~‚ğ•\¦
+				line((WIDE / 8 * i) + 25, 300, (WIDE / 8 * i) + 95, 400);// ãã®ã‚«ãƒ¼ãƒ‰ã«Ã—ã‚’è¡¨ç¤º
 				line((WIDE / 8 * i) + 95, 300, (WIDE / 8 * i) + 25, 400);
 			}
 		}
 	}
 
-	public void WhoSend() {// ƒJ[ƒh‚Ì‘—‚èæ‚ğ‘I‘ğ
+	public void WhoSend() {// ã‚«ãƒ¼ãƒ‰ã®é€ã‚Šå…ˆã‚’é¸æŠ
 		strokeWeight(1);
 		fill(0);
 		textAlign(CENTER);
 		textSize(30);
-		text("‘—‚é‘Šè‚ğ‘I‚ñ‚Å‚­‚¾‚³‚¢", WIDE / 2, 250);
+		text("é€ã‚‹ç›¸æ‰‹ã‚’é¸ã‚“ã§ãã ã•ã„", WIDE / 2, 250);
 		int j = 1;
 		for (int i = 0; i < info.player; i++) {
 			fill(255);
@@ -294,7 +292,7 @@ public class Test extends PApplet {
 		fill(0);
 		textAlign(CENTER);
 		textSize(30);
-		text("éŒ¾‚·‚éƒJ[ƒh–¼‚ğ‘I‚ñ‚Å‚­‚¾‚³‚¢", WIDE / 2, 250);
+		text("å®£è¨€ã™ã‚‹ã‚«ãƒ¼ãƒ‰åã‚’é¸ã‚“ã§ãã ã•ã„", WIDE / 2, 250);
 		info.ShowHand();
 		for (int i = 0; i < 8; i++) {
 			fill(color[i]);
@@ -309,7 +307,7 @@ public class Test extends PApplet {
 		fill(0);
 		textAlign(CENTER);
 		textSize(30);
-		text("Player" + (info.From + 1) + "‚³‚ñ‚©‚çƒJ[ƒh‚ª‘—‚ç‚ê‚Ü‚µ‚½\n" + "s“®‚ğ‘I‚ñ‚Å‚­‚¾‚³‚¢", WIDE / 2, 250);
+		text("Player" + (info.From + 1) + "ã•ã‚“ã‹ã‚‰ã‚«ãƒ¼ãƒ‰ãŒé€ã‚‰ã‚Œã¾ã—ãŸ\n" + "è¡Œå‹•ã‚’é¸ã‚“ã§ãã ã•ã„", WIDE / 2, 250);
 		for (int i = 1; i < 3; i++) {
 			fill(255);
 			rectMode(CENTER);
@@ -320,8 +318,8 @@ public class Test extends PApplet {
 		fill(0);
 		textAlign(CENTER);
 		textSize(25);
-		text("ƒJ[ƒh‚ğ‚ß‚­‚é", (WIDE / 4), 370);
-		text("‘¼‚Ìl‚É“n‚·", (WIDE * 3 / 4), 370);
+		text("ã‚«ãƒ¼ãƒ‰ã‚’ã‚ãã‚‹", (WIDE / 4), 370);
+		text("ä»–ã®äººã«æ¸¡ã™", (WIDE * 3 / 4), 370);
 	}
 
 	public void Open() {
@@ -329,7 +327,7 @@ public class Test extends PApplet {
 		fill(0);
 		textAlign(CENTER);
 		textSize(30);
-		text("Player" + (info.From + 1) + "‚Í‚±‚ÌƒJ[ƒh‚ğu" + info.Name[info.Say] + "v‚¾‚ÆŒ¾‚Á‚Ä‚¢‚Ü‚·B\n‚±‚ÌƒJ[ƒh‚Íc", WIDE / 2, 250);
+		text("Player" + (info.From + 1) + "ã¯ã“ã®ã‚«ãƒ¼ãƒ‰ã‚’ã€Œ" + info.Name[info.Say] + "ã€ã ã¨è¨€ã£ã¦ã„ã¾ã™ã€‚\nã“ã®ã‚«ãƒ¼ãƒ‰ã¯â€¦", WIDE / 2, 250);
 		for (int i = 1; i < 3; i++) {
 			fill(255);
 			rectMode(CENTER);
@@ -340,8 +338,8 @@ public class Test extends PApplet {
 		fill(0);
 		textAlign(CENTER);
 		textSize(25);
-		text(info.Name[info.Say] + "‚Å‚ ‚é", (WIDE / 4), 370);
-		text(info.Name[info.Say] + "‚Å‚Í‚È‚¢", (WIDE * 3 / 4), 370);
+		text(info.Name[info.Say] + "ã§ã‚ã‚‹", (WIDE / 4), 370);
+		text(info.Name[info.Say] + "ã§ã¯ãªã„", (WIDE * 3 / 4), 370);
 	}
 
 	public void Answer() {
@@ -349,7 +347,7 @@ public class Test extends PApplet {
 		fill(0);
 		textAlign(CENTER);
 		textSize(30);
-		text("‚±‚ÌƒJ[ƒh‚Í" + info.Name[info.Num] + "‚Å‚·", WIDE / 2, 250);
+		text("ã“ã®ã‚«ãƒ¼ãƒ‰ã¯" + info.Name[info.Num] + "ã§ã™", WIDE / 2, 250);
 		fill(color[info.Num]);
 		rectMode(CENTER);
 		strokeWeight(1);
@@ -366,9 +364,9 @@ public class Test extends PApplet {
 		fill(0);
 		textAlign(CENTER);
 		textSize(25);
-		text("‚±‚ÌƒJ[ƒh‚Í" + info.Name[info.Num] + "‚Å‚µ‚½", WIDE / 2, 225);
+		text("ã“ã®ã‚«ãƒ¼ãƒ‰ã¯" + info.Name[info.Num] + "ã§ã—ãŸ", WIDE / 2, 225);
 		fill(255, 0, 0);
-		text("³‰ğ‚Å‚·I", WIDE / 2, 250);
+		text("æ­£è§£ã§ã™ï¼", WIDE / 2, 250);
 
 		fill(color[info.Num]);
 		rectMode(CENTER);
@@ -388,9 +386,9 @@ public class Test extends PApplet {
 		fill(0);
 		textAlign(CENTER);
 		textSize(25);
-		text("‚±‚ÌƒJ[ƒh‚Í" + info.Name[info.Num] + "‚Å‚µ‚½", WIDE / 2, 225);
+		text("ã“ã®ã‚«ãƒ¼ãƒ‰ã¯" + info.Name[info.Num] + "ã§ã—ãŸ", WIDE / 2, 225);
 		fill(255, 0, 0);
-		text("•s³‰ğ‚Å‚·I", WIDE / 2, 250);
+		text("ä¸æ­£è§£ã§ã™ï¼", WIDE / 2, 250);
 
 		fill(color[info.Num]);
 		rectMode(CENTER);
@@ -407,14 +405,14 @@ public class Test extends PApplet {
 
 	public void mousePressed() {
 		switch (sw) {
-		case 0:// èD‚ÌƒNƒŠƒbƒN”»’è
+		case 0:// æ‰‹æœ­ã®ã‚¯ãƒªãƒƒã‚¯åˆ¤å®š
 			System.out.println("a");
 			for (int i = 0; i < 8; i++) {
 				if (mouseX >= (WIDE / 8 * i) + 25 && mouseX <= (WIDE / 8 * i) + 95 && mouseY >= 300 && mouseY <= 400) {
-					if (info.Hand[info.P][i] == 0) {// èD‚É‚È‚¢
-						err = 1;// ƒGƒ‰[•Ï”‚ğXV‚µ‚ÄÄ“xƒhƒ[
+					if (info.Hand[info.P][i] == 0) {// æ‰‹æœ­ã«ãªã„
+						err = 1;// ã‚¨ãƒ©ãƒ¼å¤‰æ•°ã‚’æ›´æ–°ã—ã¦å†åº¦ãƒ‰ãƒ­ãƒ¼
 						redraw();
-					} else {// èD‚É‚ ‚é‚Æ‚«
+					} else {// æ‰‹æœ­ã«ã‚ã‚‹ã¨ã
 						info.Num = i;
 						info.SendA();
 						sw = 1;
@@ -424,13 +422,13 @@ public class Test extends PApplet {
 			}
 			break;
 
-		case 1:// ‘—‚è‘Šè‚ÌƒNƒŠƒbƒN”»’è
+		case 1:// é€ã‚Šç›¸æ‰‹ã®ã‚¯ãƒªãƒƒã‚¯åˆ¤å®š
 			int j = 1;
 			for (int i = 0; i < info.player; i++) {
 				if (i != info.P) {
 					if (mouseX >= (WIDE * (2 * j - 1) / 6) - 100 && mouseX <= (WIDE * (2 * j - 1) / 6) + 100
 							&& mouseY >= 300 && mouseY <= 400) {
-						if (info.Send[i] == 1) {// ‘—‚ê‚È‚¢
+						if (info.Send[i] == 1) {// é€ã‚Œãªã„
 							err = 2;
 							redraw();
 						} else {
@@ -445,7 +443,7 @@ public class Test extends PApplet {
 			}
 			break;
 
-		case 2:// éŒ¾‚ÌƒNƒŠƒbƒN”»’è
+		case 2:// å®£è¨€ã®ã‚¯ãƒªãƒƒã‚¯åˆ¤å®š
 			for (int i = 0; i < 8; i++) {
 				if (mouseX >= (WIDE / 8 * i) + 25 && mouseX <= (WIDE / 8 * i) + 95 && mouseY >= 300 && mouseY <= 400) {
 					info.Say = i;
@@ -456,24 +454,24 @@ public class Test extends PApplet {
 			}
 			break;
 
-		case 3:// ó‚¯æ‚è‚ÌƒNƒŠƒbƒN”»’è
-			if (mouseX >= (WIDE / 4) - 150 && mouseX <= (WIDE / 4) + 150 && mouseY >= 325 && mouseY <= 395) {// •\‚É‚·‚é
+		case 3:// å—ã‘å–ã‚Šæ™‚ã®ã‚¯ãƒªãƒƒã‚¯åˆ¤å®š
+			if (mouseX >= (WIDE / 4) - 150 && mouseX <= (WIDE / 4) + 150 && mouseY >= 325 && mouseY <= 395) {// è¡¨ã«ã™ã‚‹
 				sw = 4;
 				redraw();
 			}
-			if (mouseX >= (WIDE * 3 / 4) - 150 && mouseX <= (WIDE * 3 / 4) + 150 && mouseY >= 325 && mouseY <= 395) {// ‘¼‚É‘—‚é
+			if (mouseX >= (WIDE * 3 / 4) - 150 && mouseX <= (WIDE * 3 / 4) + 150 && mouseY >= 325 && mouseY <= 395) {// ä»–ã«é€ã‚‹
 				if (info.ACanSend()) {
 					sw = 5;
 					redraw();
-				} else {// ‘—‚ê‚éƒvƒŒƒCƒ„[‚ª‚¢‚È‚¢
+				} else {// é€ã‚Œã‚‹ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ãŒã„ãªã„
 					err = 3;
 					redraw();
 				}
 			}
 			break;
 
-		case 4:// •\‚É‚·‚é‚Æ‚«‚ÌƒNƒŠƒbƒN”»’è
-			if (mouseX >= (WIDE / 4) - 150 && mouseX <= (WIDE / 4) + 150 && mouseY >= 325 && mouseY <= 395) {// `‚Å‚ ‚é
+		case 4:// è¡¨ã«ã™ã‚‹ã¨ãã®ã‚¯ãƒªãƒƒã‚¯åˆ¤å®š
+			if (mouseX >= (WIDE / 4) - 150 && mouseX <= (WIDE / 4) + 150 && mouseY >= 325 && mouseY <= 395) {// ï½ã§ã‚ã‚‹
 				info.choise = 0;
 				if (info.Num == info.Say) {
 					sw = 6;
@@ -484,7 +482,7 @@ public class Test extends PApplet {
 				}
 
 			}
-			if (mouseX >= (WIDE * 3 / 4) - 150 && mouseX <= (WIDE * 3 / 4) + 150 && mouseY >= 325 && mouseY <= 395) {// `‚Å‚È‚¢
+			if (mouseX >= (WIDE * 3 / 4) - 150 && mouseX <= (WIDE * 3 / 4) + 150 && mouseY >= 325 && mouseY <= 395) {// ï½ã§ãªã„
 				info.choise = 1;
 				if (info.Num != info.Say) {
 					sw = 6;
@@ -496,14 +494,14 @@ public class Test extends PApplet {
 			}
 			break;
 
-		case 5:// •\‚ğŠm”F‚µ‚½‚Æ‚«‚ÌƒNƒŠƒbƒN”»’è
+		case 5:// è¡¨ã‚’ç¢ºèªã—ãŸã¨ãã®ã‚¯ãƒªãƒƒã‚¯åˆ¤å®š
 			if (mouseX >= WIDE / 2 - 100 && mouseX <= WIDE / 2 + 100 && mouseY >= 365 && mouseY <= 415) {
-				sw = 1;// ‘—‚èæ‘I‘ğ‚ÉˆÚ‚é
+				sw = 1;// é€ã‚Šå…ˆé¸æŠã«ç§»ã‚‹
 				redraw();
 			}
 			break;
 
-		case 6:// ³‰ğ‚µ‚½‚Æ‚«‚ÌƒNƒŠƒbƒN”»’è
+		case 6:// æ­£è§£ã—ãŸã¨ãã®ã‚¯ãƒªãƒƒã‚¯åˆ¤å®š
 			if (mouseX >= WIDE / 2 - 100 && mouseX <= WIDE / 2 + 100 && mouseY >= 365 && mouseY <= 415) {
 				if (info.CheckField()) {
 					sw = 9;
@@ -514,14 +512,14 @@ public class Test extends PApplet {
 						sw = 8;
 						redraw();
 					} else {
-						sw = 0;// ‘—‚èæ‘I‘ğ‚ÉˆÚ‚é
+						sw = 0;// é€ã‚Šå…ˆé¸æŠã«ç§»ã‚‹
 						redraw();
 					}
 				}
 			}
 			break;
 
-		case 7:// •s³‰ğ‚Ì‚Æ‚«‚ÌƒNƒŠƒbƒN”»’è
+		case 7:// ä¸æ­£è§£ã®ã¨ãã®ã‚¯ãƒªãƒƒã‚¯åˆ¤å®š
 			if (mouseX >= WIDE / 2 - 100 && mouseX <= WIDE / 2 + 100 && mouseY >= 365 && mouseY <= 415) {
 				if (info.CheckField()) {
 					sw = 9;
@@ -532,7 +530,7 @@ public class Test extends PApplet {
 						sw = 8;
 						redraw();
 					} else {
-						sw = 0;// ‘—‚èæ‘I‘ğ‚ÉˆÚ‚é
+						sw = 0;// é€ã‚Šå…ˆé¸æŠã«ç§»ã‚‹
 						redraw();
 					}
 				}
@@ -543,7 +541,7 @@ public class Test extends PApplet {
 	}
 
 	public static void main(String[] args) {
-		PApplet.main("Test.Test");
+		PApplet.main("Test");
 		start = true;
 	}
 
