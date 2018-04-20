@@ -28,7 +28,7 @@ public class PokerClient{
 
     public static final int LIMIT = 4;  //場にたまっても良い各害虫カードの枚数
     private static String[] nickNames = null;
-
+    private static int phase = 0;
     private static int playerId;
     private static int[] handCards;  //手持ちのカードの枚数
     private static int[][] fieldCards;  //場のカードの枚数
@@ -198,12 +198,24 @@ public class PokerClient{
 
             System.out.println("押し付ける害虫カード と 宣言する害虫名 と 押し付ける相手 を選びます.");
 
-            int card = chooseInsectCard();  //どれを押し付けるか
-            int say = chooseSayWhat();  //なんと宣言するか
-            int target = chooseToWhom(choosables);  //誰に押し付けるか
+            int card = -1;
+            int say = -1;
+            int target = -1;
 
+            while(phase >= 0 && phase < 4){
+                if(phase == 0){
+                    card = chooseInsectCard();  //どれを押し付けるか
+                }else if(phase == 1){
+                    say = chooseSayWhat(true);  //なんと宣言するか
+                }else if(phase == 2){
+                    target = chooseToWhom(choosables);  //誰に押し付けるか
+                }else{
+                    confirmationPushCard(card, say, target);
+                }
+            }
+
+            phase = 0;
             handCards[card]--;  //押し付けたカードを減らす
-            System.out.println("害虫カード: " + insects[card] + " 宣言する害虫名: " + insects[say] + " 押し付ける相手: " + nickNames[target] + " で送信しました");
 
             writer.println(card);  //送信番号: S2, 押し付けるカードを送信
             writer.println(say);  //送信番号: S3, 宣言を送信
@@ -221,14 +233,15 @@ public class PokerClient{
     
     private static int chooseInsectCard(){
         int card = -1;
-        boolean correctChoice = false;
+        boolean correctInput = false;
         String str = null;
 
-        while(correctChoice == false){
+        while(correctInput == false){
 
             System.out.println("どの害虫カードを押し付けますか？ 今の手札は");
             showHandCards();
             System.out.println("です.");
+
             str = sc.next();  //押し付けるカードのidを取得
 
             try{
@@ -237,9 +250,8 @@ public class PokerClient{
                     throw new UnexpectedInputException();
                 }
 
-                System.out.print("押し付ける害虫カードが " + insects[card] + " でよければ y を入力してください: ");
-                String reply = sc.next();  //押し付けるカードを確認
-                correctChoice = correct(reply);
+                correctInput = true;
+                phase++;
 
             }catch(NumberFormatException e){
                 System.err.println("入力は数字ではありません. やり直してください");
@@ -250,25 +262,36 @@ public class PokerClient{
         return card;
     }
 
-    private static int chooseSayWhat(){
+    private static int chooseSayWhat(boolean pushCard){
         int say = -1;
-        boolean correctChoice = false;
+        boolean correctInput = false;
         String str = null;
 
-        while(correctChoice == false){
+        while(correctInput == false){
 
             System.out.println("今のカードを何と宣言して相手に押し付けますか？");
             showInsects();
+
+            if(pushCard){
+                System.out.println("押し付ける害虫カード を選びなおす場合には b を入力してください");
+            }
+
             str = sc.next();  //宣言を取得
+
+            if(pushCard && back(str)){
+                phase--;
+                break;
+            }
+
             try{
                 say = Integer.parseInt(str);
+
                 if(say < 0 || say >= INSECTNUM){
                     throw new UnexpectedInputException();
                 }
 
-                System.out.print("宣言する害虫名が " + insects[say] + " でよければ y を入力してください: ");
-                String reply = sc.next();  //前言の確認を取得
-                correctChoice = correct(reply);
+                correctInput = true;
+                phase++;
 
             }catch(NumberFormatException e){
                 System.err.println("入力は数字ではありません. やり直してください");
@@ -281,23 +304,31 @@ public class PokerClient{
 
     private static int chooseToWhom(String[] choosables){
         int target = -1;
-        boolean correctChoice = false;
+        boolean correctInput = false;
         String str = null;
 
-        while(correctChoice == false){
+        while(correctInput == false){
 
             System.out.println("押し付ける相手は誰にしますか？");
             showChoosablePlayer(choosables);
+            System.out.println("宣言する害虫名 を選びなおす場合には b を入力してください");
+
             str = sc.next();  //押し付ける相手を取得
+
+            if(back(str)){
+                phase--;
+                break;
+            }
+
             try{
                 target = Integer.parseInt(str);
+
                 if(target < 0 || target >= INSECTNUM || choosables[target].equals(no)){
                     throw new UnexpectedInputException();
                 }
 
-                System.out.print("押し付ける相手が " + nickNames[target] + " でよければ y を入力してください: ");
-                String reply = sc.next();  //押し付ける相手の確認を取得
-                correctChoice = correct(reply);
+                correctInput = true;
+                phase++;
 
             }catch(NumberFormatException e){
                 System.err.println("入力は数字ではありません. やり直してください");
@@ -307,6 +338,35 @@ public class PokerClient{
         }
         return target;
     }
+
+    private static void confirmationPushCard(int card, int say, int target){
+        boolean getReply = false;
+        String reply = null;
+        while(getReply == false){
+            System.out.println("害虫カード: " + insects[card] + " 宣言する害虫名: " + insects[say] + " 押し付ける相手: " + nickNames[target] + " で送信します.");
+            System.out.println("これでよければ y を, 押し付ける相手を選びなおす場合には b を入力してください");
+
+            reply = sc.next();
+
+            try{
+                getReply = correct(reply) || back(reply);
+
+                if(getReply == false){
+                    throw new UnexpectedInputException();
+                }
+
+            }catch(UnexpectedInputException e){
+                System.err.println("押し付ける相手を選びなおすのか行動を確定するのかわかりません. やり直してください.");
+            }
+        }
+
+        if(correct(reply)){
+            phase++;
+        }else if(back(reply)){
+            phase--;
+        }
+    }
+
 
     private static void sendAction(){  //カードを押し付けられた時
         String str1 = readSingleMessage();  //受信番号: R16, 各クライアントの役割を受信
@@ -352,17 +412,31 @@ public class PokerClient{
                 System.out.println("カードを押し付けられるプレイヤーがいません. カードを当てます.");
             }
 
-            if(pass == 1){  //他の人に押し付ける場合
-                String str = readSingleMessage();  //受信番号: R18, 押し付けられたカードがなんであったかを受信
 
-                int card = Integer.parseInt(str);
+            if(pass == 1){  //他の人に押し付ける場合
+                String str3 = readSingleMessage();  //受信番号: R18, 押し付けられたカードがなんであったかを受信
+
+                int card = Integer.parseInt(str3);
                 System.out.println("カードは " + insects[card] + " でした");
 
                 String[] choosables = new String[PLAYER];
                 choosables = readMultiMessages(PLAYER);//受信番号: R19, カードを押し付ける対象かどうかの一覧を受信
 
-                int sayAgain = chooseSayWhat();  //なんと宣言するか
-                int targetAgain = chooseToWhom(choosables);  //誰に押し付けるか
+                int sayAgain = -1;
+                int targetAgain = -1;
+
+                while(phase >= 0 && phase < 3){
+                    if(phase == 0){
+                        sayAgain = chooseSayWhat(false);  //なんと宣言するか
+                    }else if(phase == 1){
+                        targetAgain = chooseToWhom(choosables);  //誰に押し付けるか
+                    }else{
+                        confirmationPushCard(card, sayAgain, targetAgain);
+                    }
+                }
+
+                phase = 0;
+
                 writer.println(sayAgain);  //送信番号: S6, 宣言を送信
                 writer.println(targetAgain);  //送信番号: S7, 押し付ける相手を送信
 
@@ -510,35 +584,41 @@ public class PokerClient{
 
     private static void showHandCards() {//Kimura : 手持ちのカードを可視化
 		for(int i = 0; i < INSECTNUM; i++){
-			System.out.println("(" + i + ")" + insects[i] + ":" + handCards[i] + "枚");
+			System.out.println("(" + i + ")" + String.format("%-4s", insects[i]) + "\t:" + handCards[i] + "枚");
 		}
     }
 
     private static void showFieldCards(int p) {//Kimura : 場のカードを可視化
 		for(int i = 0; i < INSECTNUM; i++){
-			System.out.println("(" + i + ")" + insects[i] + ":" + fieldCards[p][i] + "枚");
+			System.out.println("(" + i + ")" + String.format("%-4s", insects[i]) + "\t:" + fieldCards[p][i] + "枚");
 		}
     }
 
     private static void showInsects() {
 		for(int i = 0; i < INSECTNUM; i++){
-			System.out.println("(" + i + ")" + insects[i] + " ");
+			System.out.println("(" + i + ")" + insects[i]);
 		}
     }  //害虫カードの種類を全て表示
 
     private static void showChoosablePlayer(String[] choosables){
         for (int i = 0; i < PLAYER; i++) {
             if(choosables[i].equals(yes)){
-                System.out.print("(" + i + ")" + nickNames[i] + " ");
+                System.out.println("(" + i + ")" + nickNames[i]);
             }
 		}
-		System.out.println();
     }
+
 
     public static boolean correct(String reply){
         String lowercase = reply.toLowerCase();
         return lowercase.equals("yes") || lowercase.equals("y");
     }  //ユーザからの入力が正しいことの確認
+
+    public static boolean back(String reply){
+        String lowercase = reply.toLowerCase();
+        return lowercase.equals("back") || lowercase.equals("b");
+    }  //ユーザからの入力やり直しを確認
+
 
     private static String readSingleMessage(){
         String str = null;
@@ -586,24 +666,10 @@ public class PokerClient{
     }  //複数データ受信
 
     private static boolean isBreak(String breakMessage){
-        String str = null;
-        try{
-            while(true){
-                str = reader.readLine();
-                if(str != null){
-                    break;
-                }
-            }
-
-            if(str.equals(breakMessage)){
-                return true;
-            }else{
-                return false;
-            }
-
-        }catch(IOException e){
-            System.err.println(e);
-            System.err.println("サーバ " + addr + " との接続が切れました");
+        String str = readSingleMessage();
+        if(str.equals(breakMessage)){
+            return true;
+        }else{
             return false;
         }
     }  //無限ループを抜けるかどうか
