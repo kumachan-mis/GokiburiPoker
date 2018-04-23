@@ -14,8 +14,8 @@ public class GUIClient extends PApplet{
     private static final String yes = "YES";
     private static final String no = "NO";
 
-    public final int WIDTH = 900;
-    public final int HEIGHT = 800;
+    public final int WIDTH = 720;
+    public final int HEIGHT = 640;
     private int numOfButton = 0;
     private int buttonY = 0;
     private int interval = 0;
@@ -115,8 +115,9 @@ public class GUIClient extends PApplet{
 
     //**********ゲームでの動作(ここから)**********
     private void showRules(){  //Eguchi: 
-        phase = 1;
-
+        phase = 0;
+        showConfirmButton(15 * HEIGHT / 16, "読んだ");
+        
         while(phase == 0){
 
         } //読んだボタンを押されるまで
@@ -397,7 +398,7 @@ public class GUIClient extends PApplet{
         strokeWeight(1);
         fill(255);
         rectMode(CENTER);
-        int mid = numOfButton / 2 + 1;
+        int mid = numOfButton / 2;
 
         for(int i = 0; i < numOfButton; ++i){
             if(numOfButton % 2 == 0){
@@ -416,7 +417,7 @@ public class GUIClient extends PApplet{
         int buttonX;
         strokeWeight(1);
         imageMode(CENTER);
-        int mid = INSECTNUM / 2 + 1;
+        int mid = INSECTNUM / 2;
 
         for(int i = 0; i < INSECTNUM; ++i){
             PImage img = loadImage("Images/" + insectsImage[i]);
@@ -442,7 +443,7 @@ public class GUIClient extends PApplet{
         textAlign(CENTER, CENTER);
         textSize(30);
         
-        int mid = numOfButton / 2 + 1;
+        int mid = numOfButton / 2;
 
         for(int i = 0; i < numOfButton; ++i){
             if(numOfButton % 2 == 0){
@@ -461,7 +462,7 @@ public class GUIClient extends PApplet{
         int buttonX;
         strokeWeight(3);
         fill(0);
-        int mid = numOfButton / 2 + 1;
+        int mid = numOfButton / 2;
 
         for(int i = 0; i < numOfButton; ++i){
             if(numOfButton % 2 == 0){
@@ -482,7 +483,8 @@ public class GUIClient extends PApplet{
     }
 
     private void releasedAction(Action action){
-        int mid = numOfButton / 2 + 1;
+        int mid = numOfButton / 2;
+        
         if(value.getBackActive() &&
         mouseX >= WIDTH * 15 / 18 && mouseX <= WIDTH * 17 / 18 &&
         mouseY >= HEIGHT / 60 && mouseY <= HEIGHT / 20){
