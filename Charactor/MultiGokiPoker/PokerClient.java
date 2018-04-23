@@ -230,143 +230,6 @@ public class PokerClient{
         str= readSingleMessage();  //受信番号: R15, メインプレイヤーの行動結果を通知
         System.out.println(str);  //メッセージの表示
     }
-    
-    private static int chooseInsectCard(){
-        int card = -1;
-        boolean correctInput = false;
-        String str = null;
-
-        while(correctInput == false){
-
-            System.out.println("どの害虫カードを押し付けますか？ 今の手札は");
-            showHandCards();
-            System.out.println("です.");
-
-            str = sc.next();  //押し付けるカードのidを取得
-
-            try{
-                card = Integer.parseInt(str);
-                if(card < 0 || card >= INSECTNUM || handCards[card] <= 0){
-                    throw new UnexpectedInputException();
-                }
-
-                correctInput = true;
-                phase++;
-
-            }catch(NumberFormatException e){
-                System.err.println("入力は数字ではありません. やり直してください");
-            }catch(UnexpectedInputException e){
-                System.err.println("そのカードは持っていないか選択肢にありません. やり直してください");
-            }
-        }
-        return card;
-    }
-
-    private static int chooseSayWhat(boolean pushCard){
-        int say = -1;
-        boolean correctInput = false;
-        String str = null;
-
-        while(correctInput == false){
-
-            System.out.println("今のカードを何と宣言して相手に押し付けますか？");
-            showInsects();
-
-            if(pushCard){
-                System.out.println("押し付ける害虫カード を選びなおす場合には b を入力してください");
-            }
-
-            str = sc.next();  //宣言を取得
-
-            if(pushCard && back(str)){
-                phase--;
-                break;
-            }
-
-            try{
-                say = Integer.parseInt(str);
-
-                if(say < 0 || say >= INSECTNUM){
-                    throw new UnexpectedInputException();
-                }
-
-                correctInput = true;
-                phase++;
-
-            }catch(NumberFormatException e){
-                System.err.println("入力は数字ではありません. やり直してください");
-            }catch(UnexpectedInputException e){
-                System.err.println("それは選択肢にありません. やり直してください");
-            }
-        }
-        return say;
-    }
-
-    private static int chooseToWhom(String[] choosables){
-        int target = -1;
-        boolean correctInput = false;
-        String str = null;
-
-        while(correctInput == false){
-
-            System.out.println("押し付ける相手は誰にしますか？");
-            showChoosablePlayer(choosables);
-            System.out.println("宣言する害虫名 を選びなおす場合には b を入力してください");
-
-            str = sc.next();  //押し付ける相手を取得
-
-            if(back(str)){
-                phase--;
-                break;
-            }
-
-            try{
-                target = Integer.parseInt(str);
-
-                if(target < 0 || target >= INSECTNUM || choosables[target].equals(no)){
-                    throw new UnexpectedInputException();
-                }
-
-                correctInput = true;
-                phase++;
-
-            }catch(NumberFormatException e){
-                System.err.println("入力は数字ではありません. やり直してください");
-            }catch(UnexpectedInputException e){
-                System.err.println("そのプレイヤーは選択肢にありません. やり直してください");
-            }
-        }
-        return target;
-    }
-
-    private static void confirmationPushCard(int card, int say, int target){
-        boolean getReply = false;
-        String reply = null;
-        while(getReply == false){
-            System.out.println("害虫カード: " + insects[card] + " 宣言する害虫名: " + insects[say] + " 押し付ける相手: " + nickNames[target] + " で送信します.");
-            System.out.println("これでよければ y を, 押し付ける相手を選びなおす場合には b を入力してください");
-
-            reply = sc.next();
-
-            try{
-                getReply = correct(reply) || back(reply);
-
-                if(getReply == false){
-                    throw new UnexpectedInputException();
-                }
-
-            }catch(UnexpectedInputException e){
-                System.err.println("押し付ける相手を選びなおすのか行動を確定するのかわかりません. やり直してください.");
-            }
-        }
-
-        if(correct(reply)){
-            phase++;
-        }else if(back(reply)){
-            phase--;
-        }
-    }
-
 
     private static void sendAction(){  //カードを押し付けられた時
         String str1 = readSingleMessage();  //受信番号: R16, 各クライアントの役割を受信
@@ -379,39 +242,13 @@ public class PokerClient{
             System.out.println("カードを押し付けられてしまいました...");
 
             if(str2.equals(yes)){  //押し付ける対象がまだいる場合
-                boolean correctChoice = false;
-
-                while(correctChoice == false){
-                    System.out.println("(0) カードを当てますか？ (1)カードをみて他のプレイヤーに押し付けますか？");
-                    String str = sc.next();  //自分で判定するか押し付けるかを取得
-
-                    try{
-                        pass = Integer.parseInt(str);
-                        if(pass != 0 && pass != 1){
-                            throw new UnexpectedInputException();
-                        }
-                        if(pass == 0){
-                            System.out.println("カードを当てる でよければ y を入力してください: ");
-                        }else if(pass == 1){
-                            System.out.println("カードをみて他のプレイヤーに押し付ける でよければ y を入力してください: ");
-                        }
-
-                        String reply = sc.next();  //自分で判定するか押し付けるかを確認
-                        correctChoice = correct(reply);
-                    }catch(NumberFormatException e){
-                        System.err.println("入力は数字ではありません. やり直してください");
-                    }catch(UnexpectedInputException e){
-                        System.err.println("それは選択肢にありません. やり直してください");
-                    }
-                }
-
+                pass = passOrBattle();  // 押し付けるか自分で当てるか
                 writer.println(pass == 1? yes : no);  //送信番号: S5, 押し付けるか自分で当てるかを送信
 
             }else if(str2.equals(no)){  //押し付ける対象がもういない場合
                 pass = 0; //たらい回しはできない
                 System.out.println("カードを押し付けられるプレイヤーがいません. カードを当てます.");
             }
-
 
             if(pass == 1){  //他の人に押し付ける場合
                 String str3 = readSingleMessage();  //受信番号: R18, 押し付けられたカードがなんであったかを受信
@@ -445,37 +282,10 @@ public class PokerClient{
                 int senderId = Integer.parseInt(str3);
                 str3 = readSingleMessage();  //受信番号: R21, 相手の宣言を受信
                 int say = Integer.parseInt(str3);
-                boolean correctChoice = false;
-                int guess = -1;
 
-                while(correctChoice == false){
-                    System.out.println(nickNames[senderId] + " はこのカードを　" + insects[say] + " と宣言しています.");
-                    System.out.println("このカードは本当に　" + insects[say] + " だと思いますか？");
-                    System.out.println("(0) そう思う (1) そう思わない");
-
-                    String str = sc.next();  //予想を取得
-
-                    try{
-                        guess = Integer.parseInt(str);
-                        if(guess != 0 && guess != 1){
-                            throw new UnexpectedInputException();
-                        }
-                        if(guess == 0){
-                            System.out.println("そう思う でよければ y を入力してください: ");
-                        }else if(guess == 1){
-                            System.out.println("そう思わない でよければ y を入力してください: ");
-                        }
-
-                        String reply = sc.next();  //予想の確認を取得
-                        correctChoice = correct(reply);
-                    }catch(NumberFormatException e){
-                        System.err.println("入力は数字ではありません. やり直してください");
-                    }catch(UnexpectedInputException e){
-                        System.err.println("それは選択肢にありません. やり直してください");
-                    }
-                }
-
+                int guess = guessCard(senderId, say);  //予想をする
                 writer.println(guess == 0? yes : no);  //受信番号: S8, 予想を送信
+
                 str3 = readSingleMessage(); //受信番号: R22, 予想の可否の通知受信
                 String str4 = readSingleMessage();  //受信番号: R23, 正解を受信
                 int ans = Integer.parseInt(str4);
@@ -523,10 +333,203 @@ public class PokerClient{
             if(receiver != -1){  //誰かの場にカードが溜まるとき
                 fieldCards[receiver][card]++;
             }
+
             str2 = readSingleMessage();   //受信番号: R30, カードの判定結果, あるいはたらい回しされたことを受信
             System.out.println(str2);  //メッセージを表示
         }
     }
+    
+    private static int chooseInsectCard(){
+        int card = -1;
+        boolean correctInput = false;
+        String str = null;
+
+        while(correctInput == false){
+
+            System.out.println("どの害虫カードを押し付けますか？ 今の手札は");
+            showHandCards();
+            System.out.println("です.");
+
+            str = sc.next();  //押し付けるカードのidを取得
+
+            try{
+                card = Integer.parseInt(str);
+                if(card < 0 || card >= INSECTNUM || handCards[card] <= 0) throw new UnexpectedInputException();
+
+                correctInput = true;
+                phase++;
+
+            }catch(NumberFormatException e){
+                System.err.println("入力は数字ではありません. やり直してください");
+            }catch(UnexpectedInputException e){
+                System.err.println("そのカードは持っていないか選択肢にありません. やり直してください");
+            }
+        }
+        return card;
+    }
+
+    private static int chooseSayWhat(boolean pushCard){
+        int say = -1;
+        boolean correctInput = false;
+        String str = null;
+
+        while(correctInput == false){
+
+            System.out.println("今のカードを何と宣言して相手に押し付けますか？");
+            showInsects();
+
+            if(pushCard){
+                System.out.println("押し付ける害虫カード を選びなおす場合には b を入力してください");
+            }
+
+            str = sc.next();  //宣言を取得
+
+            if(pushCard && back(str)){
+                phase--;
+                break;
+            }
+
+            try{
+                say = Integer.parseInt(str);
+
+                if(say < 0 || say >= INSECTNUM) throw new UnexpectedInputException();
+
+                correctInput = true;
+                phase++;
+
+            }catch(NumberFormatException e){
+                System.err.println("入力は数字ではありません. やり直してください");
+            }catch(UnexpectedInputException e){
+                System.err.println("それは選択肢にありません. やり直してください");
+            }
+        }
+        return say;
+    }
+
+    private static int chooseToWhom(String[] choosables){
+        int target = -1;
+        boolean correctInput = false;
+        String str = null;
+
+        while(correctInput == false){
+
+            System.out.println("押し付ける相手は誰にしますか？");
+            showChoosablePlayer(choosables);
+            System.out.println("宣言する害虫名 を選びなおす場合には b を入力してください");
+
+            str = sc.next();  //押し付ける相手を取得
+
+            if(back(str)){
+                phase--;
+                break;
+            }
+
+            try{
+                target = Integer.parseInt(str);
+
+                if(target < 0 || target >= INSECTNUM || choosables[target].equals(no)) throw new UnexpectedInputException();
+
+                correctInput = true;
+                phase++;
+
+            }catch(NumberFormatException e){
+                System.err.println("入力は数字ではありません. やり直してください");
+            }catch(UnexpectedInputException e){
+                System.err.println("そのプレイヤーは選択肢にありません. やり直してください");
+            }
+        }
+        return target;
+    }
+
+    private static void confirmationPushCard(int card, int say, int target){
+        boolean getReply = false;
+        String reply = null;
+
+        while(getReply == false){
+            System.out.println("害虫カード: " + insects[card] + " 宣言する害虫名: " + insects[say] + " 押し付ける相手: " + nickNames[target] + " で送信します.");
+            System.out.println("これでよければ y を, 押し付ける相手を選びなおす場合には b を入力してください");
+
+            reply = sc.next();
+
+            try{
+                getReply = correct(reply) || back(reply);
+
+                if(getReply == false) throw new UnexpectedInputException();
+
+            }catch(UnexpectedInputException e){
+                System.err.println("押し付ける相手を選びなおすのか行動を確定するのかわかりません. やり直してください.");
+            }
+        }
+
+        if(correct(reply)){
+            phase++;
+        }else if(back(reply)){
+            phase--;
+        }
+    }
+
+    private static int passOrBattle(){
+        int pass = -1;
+        boolean correctChoice = false;
+
+        while(correctChoice == false){
+            System.out.println("(0) カードを当てますか？ (1)カードをみて他のプレイヤーに押し付けますか？");
+            String str = sc.next();  //自分で判定するか押し付けるかを取得
+
+            try{
+                pass = Integer.parseInt(str);
+                if(pass != 0 && pass != 1) throw new UnexpectedInputException();
+
+                if(pass == 0){
+                    System.out.println("カードを当てる でよければ y を入力してください: ");
+                }else if(pass == 1){
+                    System.out.println("カードをみて他のプレイヤーに押し付ける でよければ y を入力してください: ");
+                }
+
+                String reply = sc.next();  //自分で判定するか押し付けるかを確認
+                correctChoice = correct(reply);
+
+            }catch(NumberFormatException e){
+                System.err.println("入力は数字ではありません. やり直してください");
+            }catch(UnexpectedInputException e){
+                System.err.println("それは選択肢にありません. やり直してください");
+            }
+        }
+        return pass;
+    }// 押し付けるか自分で当てるか
+
+    private static int guessCard(int senderId, int say){
+        int guess = -1;
+        boolean correctChoice = false;
+
+        while(correctChoice == false){
+            System.out.println(nickNames[senderId] + " はこのカードを　" + insects[say] + " と宣言しています.");
+            System.out.println("このカードは本当に　" + insects[say] + " だと思いますか？");
+            System.out.println("(0) そう思う (1) そう思わない");
+
+            String str = sc.next();  //予想を取得
+
+            try{
+                guess = Integer.parseInt(str);
+                if(guess != 0 && guess != 1) throw new UnexpectedInputException();
+
+                if(guess == 0){
+                    System.out.println("そう思う でよければ y を入力してください: ");
+                }else if(guess == 1){
+                    System.out.println("そう思わない でよければ y を入力してください: ");
+                }
+
+                String reply = sc.next();  //予想の確認を取得
+                correctChoice = correct(reply);
+                
+            }catch(NumberFormatException e){
+                System.err.println("入力は数字ではありません. やり直してください");
+            }catch(UnexpectedInputException e){
+                System.err.println("それは選択肢にありません. やり直してください");
+            }
+        }
+        return guess;
+    }  //カードを予想
 
     private static void haveTooManyInsects(){  //Kimura: 場のカードのうちLIMIT以上のものがあるか
         boolean match = false;
