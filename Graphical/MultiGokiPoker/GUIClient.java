@@ -288,6 +288,10 @@ public class GUIClient extends PApplet{
         value.setBackActive(value.getPushCard());
         showNormalMessage("今のカードを何と宣言して相手に押し付けますか？");
         showInsects();
+        if(value.getBackActive()){
+            showBackButton();
+        }
+
         while(phase == 2){
 
         }
@@ -298,6 +302,7 @@ public class GUIClient extends PApplet{
         value.setBackActive(true);
         showNormalMessage("押し付ける相手は誰にしますか？");
         showChoosablePlayer(choosables);
+        showBackButton();
         while(phase == 3){
 
         }
@@ -308,6 +313,7 @@ public class GUIClient extends PApplet{
         value.setBackActive(true);
         showNormalMessage("害虫カード: " + insects[value.getCard()] + " 宣言する害虫名: " + insects[value.getSay()] + " 押し付ける相手: " + nickNames[value.getTarget()] + " で送信します.");
         showConfirmButton(HEIGHT / 2, "OK");
+        showBackButton();
         while(phase == 4){
 
         }
@@ -413,7 +419,7 @@ public class GUIClient extends PApplet{
         int mid = INSECTNUM / 2 + 1;
 
         for(int i = 0; i < INSECTNUM; ++i){
-            PImage img = loadImage("Images/" + insectsImage);
+            PImage img = loadImage("Images/" + insectsImage[i]);
 
             if(INSECTNUM % 2 == 0){
                 buttonX =
@@ -615,7 +621,7 @@ public class GUIClient extends PApplet{
 		fill(0);
         textAlign(CENTER, CENTER);
         textSize(30);
-        text(8 * WIDTH / 9, HEIGHT / 32, WIDTH / 9, HEIGHT / 32);
+        text("戻る", 8 * WIDTH / 9, HEIGHT / 32, WIDTH / 9, HEIGHT / 32);
     }  //戻るボタン
 
     private void showChoosableCard(){
