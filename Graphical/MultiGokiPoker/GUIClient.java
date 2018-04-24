@@ -19,7 +19,7 @@ public class GUIClient extends PApplet{
     public final int HEIGHT = 640;
     private ImportantValue value = ImportantValue.getInstance();
     private GameShow show = new GameShow(this, PLAYER, INSECTNUM);
-    private GameButton button = new GameButton(this, PLAYER, INSECTNUM);
+    private GameButton button = new GameButton(this, value, PLAYER, INSECTNUM);
 
     private int turn = 1;
     private int phase = 0;
@@ -361,7 +361,7 @@ public class GUIClient extends PApplet{
     }
 
     public void mouseReleased(){
-        phase = button.getNextPhase(phase, value);
+        phase = button.getNextPhase(phase);
     }
 
     private boolean isBreak(String breakMessage){

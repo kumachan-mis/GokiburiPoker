@@ -12,6 +12,7 @@ class GameButton{
     private int HEIGHT;
     public GUIClient pa;
     private ButtonTemplate bt;
+    ImportantValue value;
 
     private Action[] actions =
     {
@@ -22,13 +23,14 @@ class GameButton{
         },
     };
 
-    public GameButton(GUIClient pa, int PLAYER, int INSECTNUM){
+    public GameButton(GUIClient pa, ImportantValue value, int PLAYER, int INSECTNUM){
         this.PLAYER = PLAYER;
         this.INSECTNUM = INSECTNUM;
         this.WIDTH = pa.WIDTH;
         this.HEIGHT = pa.HEIGHT;
         this.pa = pa;
         this.bt = new ButtonTemplate(pa, INSECTNUM);
+        this.value = value;
     }
 
     public void showConfirmButton(int buttonY, String confirm){
@@ -131,7 +133,7 @@ class GameButton{
         bt.createCross(cbs);
     }
 
-    public int getNextPhase(int phase, ImportantValue value){
-        return bt.releasedAction(actions[phase], phase, value);
+    public int getNextPhase(int phase){
+        return bt.releasedAction(actions[phase], phase, value.getBackActive());
     }
 }

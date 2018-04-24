@@ -125,13 +125,13 @@ class ButtonTemplate{
         }
     }
 
-    public int releasedAction(Action action, int phase, ImportantValue value){
+    public int releasedAction(Action action, int phase, boolean backActive){
         int ret = phase;
         int mid = numOfButton / 2;
         int mouseX = pa.mouseX;
         int mouseY = pa.mouseY;
 
-        if(value.getBackActive() &&
+        if(backActive &&
         mouseX >= WIDTH * 15 / 18 && mouseX <= WIDTH * 17 / 18 &&
         mouseY >= HEIGHT / 60 && mouseY <= HEIGHT / 20){
             ret--;
