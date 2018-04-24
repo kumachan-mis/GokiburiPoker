@@ -141,7 +141,6 @@ public class GUIClient extends PApplet{
             show.showNormalMessage(str1);  //メッセージを表示
         }
         
-        phase = 5;
         sumOfHandCards[mainPlayerId]--;
 
         str = cc.readSingleMessage();  //受信番号: R15, メインプレイヤーの行動結果を通知
@@ -252,6 +251,7 @@ public class GUIClient extends PApplet{
             if(receiver != -1){  //誰かの場にカードが溜まるとき
                 fieldCards[receiver][card]++;
             }
+            
             str2 = cc.readSingleMessage();   //受信番号: R30, カードの判定結果, あるいはたらい回しされたことを受信
             show.showImportantMessage(str2);  //メッセージを表示
             getConfirm(-1);

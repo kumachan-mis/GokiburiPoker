@@ -1,7 +1,7 @@
 import processing.core.PApplet;
 
 interface Action{
-    int action(int buttonNum);
+    void action(int buttonNum);
 }
 
 class GameButton{
@@ -14,11 +14,35 @@ class GameButton{
     private ButtonTemplate bt;
     ImportantValue value;
 
-    private Action[] actions =
-    {
+    private Action noAction = new Action(){
+        public void action(int buttonNum){
+        }
+    };
+    
+    private Action[] actions = {
         new Action(){
-            public int action(int buttonNum){
-                return 0;
+            public void action(int buttonNum) {
+                //フェーズ1の時の動作
+            }
+        },
+        new Action(){
+            public void action(int buttonNum) {
+                //フェーズ2の時の動作
+            }
+        },
+        new Action(){
+            public void action(int buttonNum) {
+                //フェーズ3の時の動作
+            }
+        },
+        new Action(){
+            public void action(int buttonNum) {
+                //フェーズ5の時の動作
+            }
+        },
+        new Action(){
+            public void action(int buttonNum) {
+                //フェーズ6の時の動作
             }
         },
     };
@@ -134,6 +158,14 @@ class GameButton{
     }
 
     public int getNextPhase(int phase){
-        return bt.releasedAction(actions[phase], phase, value.getBackActive());
+        Action a;
+        if(phase >= 1 && phase <= 3){
+            a = actions[phase - 1];
+        }else if(phase >= 5 && phase <= 6){
+            a = actions[phase - 2];
+        }else{
+            a = noAction;
+        }
+        return bt.releasedAction(a, phase, value.getBackActive());
     }
 }

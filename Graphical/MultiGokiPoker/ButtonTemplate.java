@@ -136,25 +136,27 @@ class ButtonTemplate{
         mouseY >= HEIGHT / 60 && mouseY <= HEIGHT / 20){
             ret--;
             
-         }else if(numOfButton % 2 == 0){
+         }else{
             for(int i = 0; i < numOfButton; ++i){
-                int buttonX =
-                (buttonWidth + interval) * (i - numOfButton / 2)
-                + buttonWidth / 2 - interval / 2 + WIDTH / 2;
+                int buttonX;
 
-                if(mouseX >= buttonX - buttonWidth / 2 && mouseX <= buttonX + buttonWidth / 2 &&
-                mouseY >= buttonY - buttonHeight / 2 && mouseY <= buttonY + buttonHeight / 2){
-                    ret = action.action(i);
-                    break;
+                if(numOfButton % 2 == 0){
+                    buttonX = (buttonWidth + interval) * (i - numOfButton / 2)
+                     + buttonWidth / 2 - interval / 2 + WIDTH / 2;
+                }else{
+                    buttonX = (buttonWidth + interval) * (i - mid) + WIDTH / 2;
                 }
-            }
-        }else{
-            for(int i = 0; i < numOfButton; ++i){
-                int buttonX = (buttonWidth + interval) * (i - mid) + WIDTH / 2;
 
                 if(mouseX >= buttonX - buttonWidth / 2 && mouseX <= buttonX + buttonWidth / 2 &&
-                mouseY >= buttonY - buttonHeight / 2 && mouseY <= buttonY + buttonHeight / 2){
-                    ret = action.action(i);
+                   mouseY >= buttonY - buttonHeight / 2 && mouseY <= buttonY + buttonHeight / 2){
+                    action.action(i);
+
+                    if(phase >= 1 && phase <= 3){
+                        ret++;  //最初の選択をする場合
+                    }else{
+                        ret = -1;  //そうでない場合とりあえず不定に
+                    }
+
                     break;
                 }
             }
