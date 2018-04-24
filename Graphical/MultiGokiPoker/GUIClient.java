@@ -4,50 +4,42 @@ PokerServer.javaの各送信番号・受信番号に対応しています.
 -は条件による送信文字列の分岐を意味します.
 */
 
+import java.lang.management.ThreadInfo;
 import java.net.InetAddress;
 import processing.core.PApplet;
 import processing.core.PFont;
-import processing.core.PImage;
 
 public class GUIClient extends PApplet{
 
     private static final String yes = "YES";
     private static final String no = "NO";
+    static ClientCommunication cc = null;
 
     public final int WIDTH = 720;
     public final int HEIGHT = 640;
-    private int numOfButton = 0;
-    private int buttonY = 0;
-    private int interval = 0;
-    private int buttonWidth = 0;
-    private int buttonHeight = 0;
-    private boolean[] choosables = null;
     private ImportantValue value = ImportantValue.getInstance();
+    private GameShow show = new GameShow(this, PLAYER, INSECTNUM);
+    private GameButton button = new GameButton(this, PLAYER, INSECTNUM);
 
     private int turn = 1;
     private int phase = 0;
+
     public static final int PLAYER = 4;  //プレイヤーの人数
     public static final String[] insects =
     {"コウモリ", "ハエ", "ネズミ", "サソリ", "ゴキブリ", "カエル", "クモ", "カメムシ"};
-    public static final String[] insectsImage =
-    {"", "", "", "", "", "", "", ""};
     public static final int INSECTNUM = insects.length; //カードの種類の数
     public static final int LIMIT = 4;  //場にたまっても良い各害虫カードの枚数
-
     static int playerId = -1;
     static int[] handCards = null;  //手持ちのカードの枚数
     static int[][] fieldCards = null;  //場のカードの枚数
     static String[] nickNames = null;
     static int[] sumOfHandCards = null;
 
-    static ClientCommunication cc = null;
-
     static void makeInstance(InetAddress addr, int PORT){
         handCards = new int[INSECTNUM];
         fieldCards = new int[PLAYER][INSECTNUM];
         nickNames = new String[PLAYER];
         sumOfHandCards = new int[PLAYER];
-
         cc = new ClientCommunication(addr, PORT);
     }
 
@@ -64,22 +56,13 @@ public class GUIClient extends PApplet{
     }
 
     private void resetGameView(){
-        numOfButton = 0;
-        buttonY = 0;
-        interval = 0;
-        buttonWidth = 0;
-        buttonHeight = 0;
-        choosables = null;
-
         background(0, 130, 45);
-        showTurn();
-        showMyHandCards();
-        showMyFieldCards();
-        showEnemyHandCards();
-        showEnemyFieldCards();
-        inputWindow();
-
-        System.gc();
+        show.showTurn(turn);
+        show.showMyHandCards(sumOfHandCards[playerId], handCards, nickNames[playerId]);;
+        show.showMyFieldCards(fieldCards[playerId]);;
+        show.showEnemyHandCards(playerId, sumOfHandCards, nickNames);
+        show.showEnemyFieldCards(playerId, fieldCards);
+        show.inputWindow();
     }
     
     public void draw(){
@@ -112,11 +95,10 @@ public class GUIClient extends PApplet{
 
         showResult();  //結果の表示
     }
-
-    //**********ゲームでの動作(ここから)**********
+    
     private void showRules(){  //Eguchi: 
         phase = 0;
-        showConfirmButton(15 * HEIGHT / 16, "読んだ");
+        button.showConfirmButton(15 * HEIGHT / 16, "読んだ");
         
         while(phase == 0){
 
@@ -132,7 +114,7 @@ public class GUIClient extends PApplet{
             String[] choosables = new String[PLAYER];
             choosables = cc.readMultiMessages(PLAYER);  //受信番号: R13, カードを押し付ける対象かどうかの一覧を受信
 
-            showNormalMessage("あなたの番です.");
+            show.showNormalMessage("あなたの番です.");
             getConfirm(1);
 
             while(phase >= 1 && phase < 5){
@@ -156,14 +138,14 @@ public class GUIClient extends PApplet{
 
         }else{  //メインプレイヤーでないとき
             String str1 = cc.readSingleMessage(); //受信番号: R14, 待機の指示を受信
-            showNormalMessage(str1);  //メッセージを表示
+            show.showNormalMessage(str1);  //メッセージを表示
         }
         
         phase = 5;
         sumOfHandCards[mainPlayerId]--;
 
         str = cc.readSingleMessage();  //受信番号: R15, メインプレイヤーの行動結果を通知
-        showNormalMessage(str);  //メッセージの表示
+        show.showNormalMessage(str);  //メッセージの表示
         getConfirm(-1);
     }
 
@@ -172,7 +154,7 @@ public class GUIClient extends PApplet{
         if(str1.equals(yes)){  //メインプレイヤーの時
 
             String str2 = cc.readSingleMessage();  //受信番号: R17, 押し付ける対象がまだいるかを受信
-            showNormalMessage("カードを押し付けられてしまいました...");
+            show.showNormalMessage("カードを押し付けられてしまいました...");
             getConfirm(5);
 
             if(str2.equals(yes)){  //押し付ける対象がまだいる場合
@@ -181,7 +163,7 @@ public class GUIClient extends PApplet{
 
             }else if(str2.equals(no)){  //押し付ける対象がもういない場合
                 value.setPass(false);//たらい回しはできない
-                showNormalMessage("カードを押し付けられるプレイヤーがいません. カードを当てます.");
+                show.showNormalMessage("カードを押し付けられるプレイヤーがいません. カードを当てます.");
                 getConfirm(6);
             }
 
@@ -190,7 +172,7 @@ public class GUIClient extends PApplet{
                 String str3 = cc.readSingleMessage();  //受信番号: R18, 押し付けられたカードがなんであったかを受信
                 value.setCard(Integer.parseInt(str3));
 
-                showNormalMessage("カードは " + insects[value.getCard()] + " でした");
+                show.showNormalMessage("カードは " + insects[value.getCard()] + " でした");
                 getConfirm(2);
 
                 String[] choosables = new String[PLAYER];
@@ -231,13 +213,13 @@ public class GUIClient extends PApplet{
                 }
 
                 str3 = cc.readSingleMessage();  //受信番号: R24, 表示用のメッセージを受信
-                showImportantMessage(str3);  //メッセージの表示
+                show.showImportantMessage(str3);  //メッセージの表示
                 getConfirm(-1);
             }
 
         }else if(str1.equals("SENDER")){  //直前に押し付けたプレイヤーの時
             String str2 = cc.readSingleMessage();  //送信番号: R25, 待機の指示を受信
-            showNormalMessage(str2);  //メッセージの表示
+            show.showNormalMessage(str2);  //メッセージの表示
 
             str2 = cc.readSingleMessage();  //受信番号: R26 当てられたか外れたかたらい回しかを受信
 
@@ -255,12 +237,12 @@ public class GUIClient extends PApplet{
             }
 
             str2 = cc.readSingleMessage();  //受信番号: R28, 表示用のメッセージを受信
-            showImportantMessage(str2);  //メッセージを表示
+            show.showImportantMessage(str2);  //メッセージを表示
             getConfirm(-1);
 
         }else if(str1.equals(no)){  //何事もないプレイヤーのとき
             String str2 = cc.readSingleMessage(); //受信番号: R29, 待機の指示を受信
-            showNormalMessage(str2);  //メッセージを表示
+            show.showNormalMessage(str2);  //メッセージを表示
 
             str2 = cc.readSingleMessage();    //受審番号: R32, 今メインになっているカードを受審
             int card = Integer.parseInt(str2);
@@ -271,15 +253,15 @@ public class GUIClient extends PApplet{
                 fieldCards[receiver][card]++;
             }
             str2 = cc.readSingleMessage();   //受信番号: R30, カードの判定結果, あるいはたらい回しされたことを受信
-            showImportantMessage(str2);  //メッセージを表示
+            show.showImportantMessage(str2);  //メッセージを表示
             getConfirm(-1);
         }
     }
     
     private void chooseInsectCard(){
         value.setBackActive(false);
-        showNormalMessage("どの害虫カードを押し付けますか？");
-        showChoosableCard();
+        show.showNormalMessage("どの害虫カードを押し付けますか？");
+        button.showChoosableCard(handCards);
         while(phase == 1){
 
         }
@@ -287,10 +269,10 @@ public class GUIClient extends PApplet{
 
     private void chooseSayWhat(){
         value.setBackActive(value.getPushCard());
-        showNormalMessage("今のカードを何と宣言して相手に押し付けますか？");
-        showInsects();
+        show.showNormalMessage("今のカードを何と宣言して相手に押し付けますか？");
+        button.showInsects();
         if(value.getBackActive()){
-            showBackButton();
+            button.showBackButton();
         }
 
         while(phase == 2){
@@ -301,9 +283,9 @@ public class GUIClient extends PApplet{
 
     private void chooseToWhom(String[] choosables){
         value.setBackActive(true);
-        showNormalMessage("押し付ける相手は誰にしますか？");
-        showChoosablePlayer(choosables);
-        showBackButton();
+        show.showNormalMessage("押し付ける相手は誰にしますか？");
+        button.showChoosablePlayer(playerId, nickNames, choosables, yes);;
+        button.showBackButton();
         while(phase == 3){
 
         }
@@ -312,9 +294,9 @@ public class GUIClient extends PApplet{
 
     private void confirmationPushCard(){
         value.setBackActive(true);
-        showNormalMessage("害虫カード: " + insects[value.getCard()] + " 宣言する害虫名: " + insects[value.getSay()] + " 押し付ける相手: " + nickNames[value.getTarget()] + " で送信します.");
-        showConfirmButton(HEIGHT / 2, "OK");
-        showBackButton();
+        show.showNormalMessage("害虫カード: " + insects[value.getCard()] + " 宣言する害虫名: " + insects[value.getSay()] + " 押し付ける相手: " + nickNames[value.getTarget()] + " で送信します.");
+        button.showConfirmButton(HEIGHT / 2, "OK");
+        button.showBackButton();
         while(phase == 4){
 
         }
@@ -322,32 +304,19 @@ public class GUIClient extends PApplet{
     }
 
     private void passOrBattle(){
-        showNormalMessage("行動を選択してください");
-        numOfButton = 2;
-        buttonY = 9 * HEIGHT / 20;
-        buttonWidth = WIDTH / 3;
-        buttonHeight = 7 * HEIGHT / 80;
-        interval = WIDTH / 6;
-        createButtonRect();
-        String[] texts = {"他の人に押し付ける", "自分で当てる"};
-        createButtonText(texts);
-
+        show.showNormalMessage("行動を選択してください");
+        String[] yes_or_no = {"他の人に押し付ける", "自分で当てる"};
+        button.showYesOrNoButton(yes_or_no);
         while(phase == 5){
 
         }
     }
 
     private void guessCard(int senderId, int say){
-        showNormalMessage(nickNames[senderId] + " はこのカードを　" + insects[say] + " と宣言しています.\n" +
+        show.showNormalMessage(nickNames[senderId] + " はこのカードを　" + insects[say] + " と宣言しています.\n" +
         "このカードは本当に　" + insects[say] + " だと思いますか？"); 
-        numOfButton = 2;
-        buttonY = 9 * HEIGHT / 20;
-        buttonWidth = WIDTH / 3;
-        buttonHeight = 7 * HEIGHT / 80;
-        interval = WIDTH / 6;
-        createButtonRect();
-        String[] texts = {"そう思う", "違うと思う"};
-        createButtonText(texts); 
+        String[] yes_or_no = {"そう思う", "違うと思う"};
+        button.showYesOrNoButton(yes_or_no);
 
         while(phase == 6){
 
@@ -383,415 +352,17 @@ public class GUIClient extends PApplet{
     }
 
     private void getConfirm(int phase){
-        showConfirmButton(HEIGHT / 2, "OK");  //  フェーズ 7: 確認
+        button.showConfirmButton(HEIGHT / 2, "OK");  //  フェーズ 7: 確認
         phase = 7;
         while(phase == 7){
 
         }
         this.phase = phase;
     }
-    //**********ゲームでの動作(ここまで)**********
-
-    //**********ボタン生成・動作(ここから)**********
-    private void createButtonRect(){
-        int buttonX;
-        strokeWeight(1);
-        fill(255);
-        rectMode(CENTER);
-        int mid = numOfButton / 2;
-
-        for(int i = 0; i < numOfButton; ++i){
-            if(numOfButton % 2 == 0){
-                buttonX =
-                (buttonWidth + interval) * (i - numOfButton / 2)
-                + buttonWidth / 2 - interval / 2 + WIDTH / 2;
-            }else{
-                buttonX = (buttonWidth + interval) * (i - mid) + WIDTH / 2;
-            }
-
-            rect(buttonX, buttonY, buttonWidth, buttonHeight);
-        }
-    }
-
-    private void createButtonImage(){
-        int buttonX;
-        strokeWeight(1);
-        imageMode(CENTER);
-        int mid = INSECTNUM / 2;
-
-        for(int i = 0; i < INSECTNUM; ++i){
-            PImage img = loadImage("Images/" + insectsImage[i]);
-
-            if(INSECTNUM % 2 == 0){
-                buttonX =
-                (buttonWidth + interval) * (i - INSECTNUM / 2)
-                + buttonWidth / 2 - interval / 2 + WIDTH / 2;
-
-            }else{
-                buttonX = (buttonWidth + interval) * (i - mid) + WIDTH / 2;
-            }
-            
-            image(img, buttonX, buttonY, buttonWidth, buttonHeight);
-        }
-    }
-
-    private void createButtonText(String[] texts){
-        int buttonX;
-
-        strokeWeight(1);
-		fill(0);
-        textAlign(CENTER, CENTER);
-        textSize(30);
-        
-        int mid = numOfButton / 2;
-
-        for(int i = 0; i < numOfButton; ++i){
-            if(numOfButton % 2 == 0){
-                buttonX =
-                (buttonWidth + interval) * (i - numOfButton / 2)
-                + buttonWidth / 2 - interval / 2 + WIDTH / 2;
-            }else{
-                buttonX = (buttonWidth + interval) * (i - mid) + WIDTH / 2;
-            }
-
-            text(texts[i], buttonX, buttonY, buttonWidth, buttonHeight);
-        }
-    }
-
-    private void createCross(){  // Kimura: 選択できないカードに×を表示
-        int buttonX;
-        strokeWeight(3);
-        fill(0);
-        int mid = numOfButton / 2;
-
-        for(int i = 0; i < numOfButton; ++i){
-            if(numOfButton % 2 == 0){
-                buttonX =
-                (buttonWidth + interval) * (i - numOfButton / 2)
-                + buttonWidth / 2 - interval / 2 + WIDTH / 2;
-            }else{
-                buttonX = (buttonWidth + interval) * (i - mid) + WIDTH / 2;
-            }
-
-            if(choosables[i] == false){
-                line(buttonX - buttonWidth / 2, buttonY - buttonHeight / 2,
-                buttonX + buttonWidth / 2, buttonY + buttonHeight / 2);
-                line(buttonX + buttonWidth / 2, buttonY - buttonHeight / 2,
-                buttonX - buttonWidth / 2, buttonY + buttonHeight / 2);
-            }
-        }
-    }
-
-    private void releasedAction(Action action){
-        int mid = numOfButton / 2;
-        
-        if(value.getBackActive() &&
-        mouseX >= WIDTH * 15 / 18 && mouseX <= WIDTH * 17 / 18 &&
-        mouseY >= HEIGHT / 60 && mouseY <= HEIGHT / 20){
-            phase--;
-         }
-
-        if(numOfButton % 2 == 0){
-            for(int i = 0; i < numOfButton; ++i){
-                int buttonX =
-                (buttonWidth + interval) * (i - numOfButton / 2)
-                + buttonWidth / 2 - interval / 2 + WIDTH / 2;
-
-                if(mouseX >= buttonX - buttonWidth / 2 && mouseX <= buttonX + buttonWidth / 2 &&
-                mouseY >= buttonY - buttonHeight / 2 && mouseY <= buttonY + buttonHeight / 2){
-                    action.action(i);
-                    break;
-                }
-            }
-        }else{
-            for(int i = 0; i < numOfButton; ++i){
-                int buttonX = (buttonWidth + interval) * (i - mid) + WIDTH / 2;
-
-                if(mouseX >= buttonX - buttonWidth / 2 && mouseX <= buttonX + buttonWidth / 2 &&
-                mouseY >= buttonY - buttonHeight / 2 && mouseY <= buttonY + buttonHeight / 2){
-                    action.action(i);
-                    break;
-                }
-            }
-        }
-    }
 
     public void mouseReleased(){
-        Action a;
-        if(phase == 0){  //ルール読み
-            a = new Action(){
-                @Override
-                public void action(int i) {
-                    phase = 1;
-                }
-            };
-        }else if(phase == 1){  //カード選び
-            a = new Action(){
-                @Override
-                public void action(int i) {
-                    if(choosables[i]) value.setCard(i);
-                    phase = 2;
-                }
-            };
-        }else if(phase == 2){  //宣言選び
-            a = new Action(){
-                @Override
-                public void action(int i) {
-                    value.setSay(i);
-                    phase = 3;
-                }
-            };
-        }else if(phase == 3){  //相手選び
-            a = new Action(){
-                @Override
-                public void action(int i) {
-                    if(choosables[i]){
-                        if(i < playerId){
-                            value.setTarget(i);
-                        }else{
-                            value.setTarget(i + 1);
-                        }
-                    }
-                    phase = 4;
-                }
-            };
-        }else if(phase == 4){  //行動確認
-            a = new Action(){
-                @Override
-                public void action(int i) {
-                    phase = -1;
-                }
-            };
-        }else if(phase == 5){  //押し付けるか, 当てるか
-            a = new Action(){
-                @Override
-                public void action(int i) {
-                    if(i == 0){
-                        value.setPass(true);
-                    }else if(i == 1){
-                        value.setPass(false);
-                    }
-                    phase = -1;
-                }
-            };
-        }else if(phase == 6){  //予想
-            a = new Action(){
-                @Override
-                public void action(int i) {
-                    if(i == 0){
-                        value.setGuess(true);
-                    }else if(i == 1){
-                        value.setGuess(false);
-                    }
-                    phase = -1;
-                }
-            };
-        }else{  //メッセージ読み確認
-            a = new Action(){
-                @Override
-                public void action(int i) {
-                    phase = -1;
-                }
-            };
-        }
-        releasedAction(a);
+        phase = button.getNextPhase(phase, value);
     }
-    //**********ボタン生成・動作(ここまで)**********
-
-    //**********ボタン列の表示(ここから)**********
-    private void showConfirmButton(int buttonY, String text){
-        numOfButton = 1;
-        this.buttonY = buttonY;
-        interval = 0;
-        buttonWidth = 2 * WIDTH / 9;
-        buttonHeight = HEIGHT / 16;
-        createButtonRect();
-
-        strokeWeight(1);
-		fill(0);
-        textAlign(CENTER, CENTER);
-        textSize(30);
-        text(text, WIDTH / 2, buttonY, buttonWidth, buttonHeight);
-    }  //OKボタン
-
-    private void showBackButton(){
-        strokeWeight(1);
-        fill(255);
-        rectMode(CENTER);
-        rect(8 * WIDTH / 9, HEIGHT / 30, WIDTH / 9, HEIGHT / 30);
-
-		fill(0);
-        textAlign(CENTER, CENTER);
-        textSize(30);
-        text("戻る", 8 * WIDTH / 9, HEIGHT / 32, WIDTH / 9, HEIGHT / 32);
-    }  //戻るボタン
-
-    private void showChoosableCard(){
-        showInsects();
-        choosables = new boolean[INSECTNUM];
-
-        for (int i = 0; i < INSECTNUM; ++i) {
-			choosables[i] = (handCards[i] > 0);
-        }
-        createCross();
-    }
-
-    private void showInsects() {
-        numOfButton = INSECTNUM;
-        buttonY = 3 * HEIGHT / 8;
-        buttonWidth = 7 * WIDTH / 90;
-        buttonHeight = HEIGHT / 8;
-        interval = WIDTH / 8 - buttonWidth;
-        createButtonImage();
-    }
-
-    private void showChoosablePlayer(String[] choosables){
-        numOfButton = PLAYER - 1;
-        buttonY = 7 * HEIGHT / 16;
-        interval =  WIDTH / 9;
-        buttonWidth = 2 * WIDTH / 9;
-        buttonHeight = HEIGHT / 8;
-        this.choosables = new boolean[PLAYER - 1];
-
-        for(int i = 0; i < PLAYER; ++i){
-            if(i < playerId){
-                this.choosables[i] = choosables.equals(yes);
-            }else if(i > playerId){
-                this.choosables[i - 1] = choosables.equals(yes);
-            }
-        }
-
-        createButtonRect();
-
-        String[] exceptSelfName = new String[PLAYER - 1];
-        for(int i = 0; i < PLAYER; ++i){
-            if(i < playerId){
-                exceptSelfName[i] = nickNames[i];
-            }else if(i > playerId){
-                exceptSelfName[i - 1] = nickNames[i];
-            }
-        }
-        createButtonText(exceptSelfName);
-        createCross();
-    }
-    //**********ボタン列の表示(ここまで)**********
-
-
-    //**********各種画面表示(ここから)**********
-    private void showTurn() {  // // Kimura: ターン表示
-		fill(0);
-		textAlign(CENTER);
-		textSize(30);
-		text("<Turn " + turn + ">", WIDTH / 2, 9 * HEIGHT / 16);
-    }
-
-    private void inputWindow(){  // Kimura: 操作用疑似ウィンドウの表示用背景
-        rectMode(CORNER);
-		strokeWeight(3);
-		fill(0, 90, 30);
-		rect(0, HEIGHT / 4, WIDTH, 11 * HEIGHT / 40);
-    }
-
-    private void showNormalMessage(String message){  //Kimura: ゲーム中のメッセージ表示
-        resetGameView();
-        strokeWeight(1);
-		fill(0);
-		textAlign(CENTER);
-		textSize(30);
-        text(message, WIDTH / 2, 5 * HEIGHT / 16);
-    }
-
-    private void showImportantMessage(String message){  //Kimura: ゲーム中の重要メッセージ表示
-        strokeWeight(1);
-		fill(255, 0, 0);
-		textAlign(CENTER);
-		textSize(30);
-		text(message, WIDTH / 2, 5 * HEIGHT / 16 + 10);
-    }
-
-    private void showMyHandCards() {  //Kimura: 自分の手札の表示
-        int sum = 0;
-        
-		for (int i = 0; i < INSECTNUM; ++i) {
-			//fill(color[i]);
-			strokeWeight(1);
-			for(int j = 0; j < handCards[i]; ++j) {
-                int cardX = WIDTH / 2 + (sum - sumOfHandCards[playerId] / 2) * 7 * WIDTH / 90;
-
-				if (sumOfHandCards[playerId] % 2 == 1) {// 手札が奇数の時
-					rectMode(CENTER);
-					rect(cardX, 7 * HEIGHT / 8, 7 * WIDTH / 90, HEIGHT / 8);
-				} else {// 手札が奇数の時
-					rectMode(CORNER);
-					rect(cardX - WIDTH / 50, 7 * HEIGHT / 8, 7 * WIDTH / 90, HEIGHT / 8);
-				}
-				sum++;
-			}
-        }
-        
-		fill(0);
-		textAlign(CENTER);
-		textSize(30);
-		text(nickNames[playerId], WIDTH / 2, 49 * HEIGHT / 50);
-    }
-
-    private void showEnemyHandCards() {  //Kimura: 敵の手札の数を表示
-        fill(255, 255, 255);
-        strokeWeight(1);
-        int i = 1;
-		for (int p = 0; p < PLAYER; ++p) {
-			if (p != playerId) {
-				for (int j = 0; j <  sumOfHandCards[p]; ++j) {
-                    
-                    int cardX = WIDTH * (2 * i - 1) / 6 + (j -  sumOfHandCards[p] / 2) * WIDTH / 90;
-
-					if (sumOfHandCards[p] % 2 == 1) {// 手札が奇数の時
-						rectMode(CENTER);
-						rect(cardX, 5 * HEIGHT / 80, 7 * WIDTH / 180, HEIGHT / 16);
-					} else {// 偶数の時
-						rectMode(CORNER);
-						rect(cardX - WIDTH / 100, 5 * HEIGHT / 80, 7 * WIDTH / 180, HEIGHT / 16);
-					}
-					fill(0);
-					textAlign(CENTER);
-					textSize(30);
-					text(nickNames[p], WIDTH * (2 * i - 1) / 6, 3 * HEIGHT / 80);
-				}
-				i++;
-
-			}
-
-		}
-    }
-
-    private void showMyFieldCards() {  //Kimura: 自分の場の表示
-        strokeWeight(1);
-		for (int i = 0; i < INSECTNUM; ++i) {
-			//fill(color[i]);
-			for(int j = 0; j < fieldCards[playerId][i]; ++j) {
-				rectMode(CENTER);
-				rect(WIDTH / 9 * (i + 1), 7 * HEIGHT / 10 - (j * 3 * HEIGHT / 80), 16 * WIDTH / 225, HEIGHT / 10);
-			}
-		}
-    }
-
-    private void showEnemyFieldCards() {  //Kimura: 敵の場の表示
-        rectMode(CORNER);
-		strokeWeight(1);
-        int k = 1;
-		for (int p = 0; p < PLAYER; p++) {
-			if (p != playerId) {
-				for (int i = 0; i < INSECTNUM; ++i) {
-					//fill(color[i]);
-					for(int j = 0; j < fieldCards[p][i]; ++j) {
-						rect(WIDTH * (2 * k - 1) / 6 + (i - 4) * WIDTH / 30, 3 * HEIGHT / 16 - j * HEIGHT / 160, 7 * WIDTH / 300, 3 * HEIGHT / 80);
-					}
-				}
-				k++;
-			}
-		}
-    }
-    //**********各種画面表示(ここまで)**********
 
     private boolean isBreak(String breakMessage){
         String str = cc.readSingleMessage();
@@ -801,75 +372,4 @@ public class GUIClient extends PApplet{
             return false;
         }
     }  //無限ループを抜けるかどうか
-}
-
-interface Action{
-    void action(int i);
-}
-
-class ImportantValue{
-    private int card;
-    private int say;
-    private int target;
-    private boolean pass;
-    private boolean guess;
-    private boolean pushCard;
-    private boolean backActive;
-    private static ImportantValue value = new ImportantValue();
-
-    private ImportantValue(){
-        card = -1;
-        say = -1;
-        target = -1;
-        backActive = false;
-    }
-
-    static ImportantValue getInstance(){
-        return value;
-    }
-
-    int getCard(){
-        return card;
-    }
-    int getSay(){
-        return say;
-    }
-    int getTarget(){
-        return target;
-    }
-    boolean getPass(){
-        return pass;
-    }
-    boolean getGuess(){
-        return guess;
-    }
-    boolean getPushCard(){
-        return pushCard;
-    }
-    boolean getBackActive(){
-        return backActive;
-    }
-
-
-    void setCard(int card){
-        this.card = card;
-    }
-    void setSay(int say){
-        this.say = say;
-    }
-    void setTarget(int target){
-        this.target = target;
-    }
-    void setPass(boolean pass){
-        this.pass = pass;
-    }
-    void setGuess(boolean guess){
-        this.guess = guess;
-    }
-    void setPushCard(boolean pushCard){
-        this.pushCard = pushCard;
-    }
-    void setBackActive(boolean backActive){
-        this.backActive = backActive;
-    }
 }
