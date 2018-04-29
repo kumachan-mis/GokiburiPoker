@@ -80,6 +80,7 @@ class GameButton{
         int buttonWidth = WIDTH / 9;
         int buttonHeight = HEIGHT / 30;
 
+        bt.setButtonData(1, buttonY, 0, buttonWidth, buttonHeight);
         pa.strokeWeight(1);
         pa.fill(255);
         pa.rectMode(pa.CENTER);
@@ -101,7 +102,7 @@ class GameButton{
         bt.setButtonData(numOfButton, buttonY, interval, buttonWidth, buttonHeight);
         bt.createButtonRect();
         bt.createButtonText(yes_or_no); 
-    }
+    }  //2択ボタン
 
     public void showChoosableCard(int[] handCards){
         showInsects();
@@ -111,7 +112,7 @@ class GameButton{
 			choosables[i] = (handCards[i] > 0);
         }
         bt.createCross(choosables);
-    }
+    }  //押し付けられるカードのボタン
 
     public void showInsects() {
         int numOfButton = INSECTNUM;
@@ -122,7 +123,7 @@ class GameButton{
 
         bt.setButtonData(numOfButton, buttonY, interval, buttonWidth, buttonHeight);
         bt.createButtonImage();
-    }
+    }  //宣言する昆虫を選ぶボタン
 
     public void showChoosablePlayer(int playerId, String[] nickNames, String[] choosables, String yes){
         int numOfButton = PLAYER - 1;
@@ -155,7 +156,7 @@ class GameButton{
         bt.createButtonRect();
         bt.createButtonText(exceptSelfName);
         bt.createCross(cbs);
-    }
+    }  //押し付けることのできる人のボタン
 
     public int getNextPhase(int phase){
         Action a;
@@ -167,5 +168,5 @@ class GameButton{
             a = noAction;
         }
         return bt.releasedAction(a, phase, value.getBackActive());
-    }
+    }  //ボタンが押された時の動作をphaseによって選択
 }

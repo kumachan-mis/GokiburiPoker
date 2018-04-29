@@ -118,7 +118,7 @@ class ClientCommunication{
         }
 
         return handCards;
-    }
+    }  //自分の手持ちのカードを受信
 
 
     int[] readSumOfHandCards(){
@@ -151,5 +151,5 @@ class ClientCommunication{
             return null;
         }
         return sumOfHandCards;
-    }
+    }  //各プレイヤーの初期カード枚数を受信
 }

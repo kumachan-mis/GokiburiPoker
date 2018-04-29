@@ -221,7 +221,7 @@ class PokerServerThread extends Thread{
             firstCardNum++;
             index += PokerServer.PLAYER;
         }
-        writer.println(end);  //送信番号: S10, 手持ちのカードを送信
+        writer.println(end);  //送信番号: S10, クライアントの手持ちのカードを送信
         processAC("ゲームを開始します.");  //送信番号: S11, ゲームの開始を送信
         synchro.synchro();
 

@@ -80,9 +80,9 @@ public class PokerClient{
     }
 
     private static void receiveHandCards(){
-        GUIClient.handCards = cc.readHandCards();
+        GUIClient.handCards = cc.readHandCards();  //受信番号: R10, 自分の手持ちのカードを受信
         String str = cc.readSingleMessage();  //受信番号: R11, ゲームの開始を受信
         System.out.println(str);  //メッセージをコマンドラインに表示
-        GUIClient.sumOfHandCards = cc.readSumOfHandCards();
+        GUIClient.sumOfHandCards = cc.readSumOfHandCards();  //受信番号: R36, 各プレイヤーの初期カード枚数を受信
     }
 }

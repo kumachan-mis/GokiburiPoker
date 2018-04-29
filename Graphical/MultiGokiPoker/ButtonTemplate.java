@@ -6,11 +6,12 @@ class ButtonTemplate{
     private int HEIGHT;
     private int INSECTNUM;
 
-    private int numOfButton = 0;
-    private int buttonY = 0;
-    private int interval = 0;
-    private int buttonWidth = 0;
-    private int buttonHeight = 0;
+    private int numOfButton = 0; //ボタンの個数
+    private int buttonY = 0;  //ボタン列の中心のY座標
+    private int interval = 0;  //ボタンとボタンの間隔
+    private int buttonWidth = 0;  //ボタンの幅
+    //ボタンの中心のoX座標の差は buttonWidth + interval
+    private int buttonHeight = 0;  //ボタンの高さ
     private GUIClient pa;
 
     public ButtonTemplate(GUIClient pa, int INSECTNUM){
@@ -54,7 +55,7 @@ class ButtonTemplate{
 
             pa.rect(buttonX, buttonY, buttonWidth, buttonHeight);
         }
-    }
+    }  //ボタン列が左右対称に配置される
 
     public void createButtonImage(){
         int buttonX;
@@ -162,6 +163,6 @@ class ButtonTemplate{
             }
         }
         return ret;
-    }
+    }  //ボタンが押された時の動作を実行
     
 }
